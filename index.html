@@ -75,11 +75,21 @@ canvas{display:block;width:100%;height:100%}
 .tl-chip{font-size:10px;padding:3px 9px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid var(--border);cursor:pointer;color:var(--text)}
 .tl-chip:hover{background:rgba(255,255,255,.1)}
 
-/* NODE PANEL */
-.node-panel{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#080818;border-top:1px solid var(--border);border-radius:18px 18px 0 0;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:80vh;overflow-y:auto}
-.node-panel.open{transform:translateY(0)}
+/* NODE PANEL — right sidebar */
+.node-panel{position:fixed;top:0;right:0;bottom:0;width:min(380px,38vw);z-index:30;background:#06060f;border-left:1px solid var(--border);transform:translateX(100%);transition:transform .32s cubic-bezier(.4,0,.2,1);overflow-y:auto;display:flex;flex-direction:column}
+.node-panel.open{transform:translateX(0)}
+/* When panel open, shrink canvas area */
+.canvas-shifted{right:min(380px,38vw) !important}
+/* Mobile: keep bottom sheet on small screens */
+@media(max-width:600px){
+  .node-panel{top:auto;right:0;left:0;width:100%;bottom:0;height:65vh;border-left:none;border-top:1px solid var(--border);border-radius:18px 18px 0 0;transform:translateY(100%)}
+  .node-panel.open{transform:translateY(0)}
+  .canvas-shifted{right:0 !important;bottom:65vh !important}
+}
 .panel-handle{width:34px;height:4px;background:rgba(255,255,255,.12);border-radius:2px;margin:10px auto 0}
-.panel-body{padding:12px 16px 32px}
+.panel-handle{display:none}
+@media(max-width:600px){.panel-handle{display:block;width:34px;height:4px;background:rgba(255,255,255,.12);border-radius:2px;margin:10px auto 0}}
+.panel-body{padding:14px 16px 32px;flex:1}
 .panel-cat{font-size:9px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;padding:2px 9px;border-radius:20px;border:1px solid;display:inline-block;margin-bottom:8px}
 .panel-title{font-size:20px;font-weight:800;letter-spacing:-.4px;margin-bottom:6px;line-height:1.2}
 .panel-desc{font-size:13px;color:rgba(255,255,255,.6);line-height:1.75;margin-bottom:14px}
@@ -100,7 +110,9 @@ canvas{display:block;width:100%;height:100%}
 .work-info{flex:1;min-width:0}
 .work-title{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .work-author{font-size:10px;color:var(--muted)}
-.close-panel{position:absolute;right:12px;top:10px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer}
+.close-panel{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;padding:12px 16px 8px;background:#06060f;border-bottom:1px solid var(--border);z-index:1;flex-shrink:0}
+.close-panel-title{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.5px;text-transform:uppercase}
+.close-panel-btn{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;padding:2px}
 
 /* DNA BAR */
 .dna-bar-wrap{margin:3px 0 2px}
@@ -136,7 +148,7 @@ canvas{display:block;width:100%;height:100%}
 </style>
 </head>
 <body>
-<script src="data.js"></script>
+<script src="data.js" defer></script>
 
 <!-- INTRO -->
 <div class="intro" id="intro">
@@ -193,7 +205,10 @@ canvas{display:block;width:100%;height:100%}
 <!-- NODE PANEL -->
 <div class="node-panel" id="node-panel">
   <div class="panel-handle"></div>
-  <button class="close-panel" onclick="closePanel()">×</button>
+  <div class="close-panel">
+    <span class="close-panel-title" id="panel-header-title">concepto</span>
+    <button class="close-panel-btn" onclick="closePanel()">×</button>
+  </div>
   <div class="panel-body" id="panel-body"></div>
 </div>
 
@@ -251,13 +266,8 @@ Object.values(SECRET_NODES).forEach(sn=>{
   nodeCatColor[sn.id]=sn.color||'#ffffff';
 });
 
+// Stats calculated after load
 let totalWorks=0,totalConns=0;
-nodeIds.forEach(id=>{totalWorks+=NODES[id].works.length;totalConns+=NODES[id].connections.length;});
-totalConns=Math.round(totalConns/2);
-
-document.getElementById('i-nodes').textContent=nodeIds.length;
-document.getElementById('i-works').textContent=totalWorks;
-document.getElementById('i-conns').textContent=totalConns;
 
 const edgeWeights={};
 nodeIds.forEach(id=>{
@@ -314,8 +324,7 @@ function animStars(ts){
   stars.forEach(s=>{s.a+=s.da;if(s.a>1||s.a<0)s.da*=-1;ictx.fillStyle=`rgba(255,255,255,${s.a*.7})`;ictx.beginPath();ictx.arc(s.x,s.y,s.r,0,Math.PI*2);ictx.fill();});
   requestAnimationFrame(animStars);
 }
-resizeIntro();initStars();requestAnimationFrame(animStars);
-window.addEventListener('resize',resizeIntro);
+// Stars initialized in window.load
 
 // ── MAP CANVAS ──────────────────────────────────────────────
 const canvas=document.getElementById('map-canvas');
@@ -331,7 +340,9 @@ const visibleNodes=new Set(nodeIds); // all visible by default (secrets hidden u
 
 function resize(){
   const dpr=window.devicePixelRatio||1;
-  W=window.innerWidth;H=window.innerHeight;
+  const panelOpen=document.getElementById('node-panel')?.classList.contains('open');
+  const panelW=panelOpen&&window.innerWidth>600?Math.min(380,Math.round(window.innerWidth*.38)):0;
+  W=window.innerWidth-panelW;H=window.innerHeight;
   canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);
   canvas.style.width=W+'px';canvas.style.height=H+'px';
   ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -579,11 +590,24 @@ function openNode(id){
           <span style="font-size:10px;color:var(--muted)">ADN →</span>
         </div>`).join('')}
     </div>`;
+  document.getElementById('panel-header-title').textContent=catLabel;
   document.getElementById('node-panel').classList.add('open');
-  const p=nodePositions[id];if(p){camX+=(p.x-camX)*.4;camY+=(p.y-camY)*.4;}
+  document.getElementById('canvas-wrap').classList.add('canvas-shifted');
+  // Center camera on left 2/3 of screen
+  const p=nodePositions[id];
+  if(p){
+    const panelW=Math.min(380,window.innerWidth*.38);
+    const targetX=p.x-(panelW/2)/scale;
+    camX+=(targetX-camX)*.45;
+    camY+=(p.y-camY)*.45;
+  }
 }
 
-function closePanel(){selectedNode=null;document.getElementById('node-panel').classList.remove('open');}
+function closePanel(){
+  selectedNode=null;
+  document.getElementById('node-panel').classList.remove('open');
+  document.getElementById('canvas-wrap').classList.remove('canvas-shifted');
+}
 
 function showWhy(id1,id2){
   const key=[id1,id2].sort().join('||');
@@ -774,7 +798,21 @@ function buildProfile(){
 
 // ── CONTROLS ─────────────────────────────────────────────────
 function zoom(f){scale=Math.max(.12,Math.min(5,scale*f));}
-function resetView(){camX=0;camY=0;scale=.75;closePanel();activeFilter=null;filterType=null;buildFilterBar('cat');}
+function resetView(){
+  camX=0;camY=0;
+  // Auto-fit: find bounding box of all nodes
+  if(Object.keys(nodePositions).length>0){
+    let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+    Object.values(nodePositions).forEach(p=>{minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);minY=Math.min(minY,p.y);maxY=Math.max(maxY,p.y);});
+    const bw=maxX-minX,bh=maxY-minY;
+    const margin=120;
+    scale=Math.min((W-margin*2)/bw,(H-margin*2)/bh,.9);
+    camX=(minX+maxX)/2;camY=(minY+maxY)/2;
+  } else {
+    scale=.6;
+  }
+  closePanel();activeFilter=null;filterType=null;buildFilterBar('cat');
+}
 
 // ── START ────────────────────────────────────────────────────
 function startApp(){
@@ -805,25 +843,36 @@ function loop(ts){
 }
 
 // ── BOOT ─────────────────────────────────────────────────────
-resize();
-window.addEventListener('resize',resize);
+window.addEventListener('load', function(){
+  resize();
+  window.addEventListener('resize', resize);
 
-// Verify data loaded
-if(typeof NODES === 'undefined' || Object.keys(NODES).length === 0){
-  document.querySelector('.intro-sub').textContent = 'Error cargando datos. Recarga la página.';
-} else {
+  if(typeof NODES==='undefined'||Object.keys(NODES).length===0){
+    document.querySelector('.intro-sub').textContent='Error cargando datos. Recarga la página.';
+    return;
+  }
+
+  // Init stats
+  nodeIds.forEach(id=>{totalWorks+=(NODES[id]?.works?.length||0);totalConns+=(NODES[id]?.connections?.length||0);});
+  totalConns=Math.round(totalConns/2);
+  document.getElementById('i-nodes').textContent=nodeIds.length;
+  document.getElementById('i-works').textContent=totalWorks;
+  document.getElementById('i-conns').textContent=totalConns;
+
   initLayout();
   requestAnimationFrame(loop);
-}
+  resizeIntro();
+  initStars();
+  requestAnimationFrame(animStars);
+  window.addEventListener('resize', resizeIntro);
 
-// Unregister old service workers to fix caching issues
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.getRegistrations().then(regs=>{
-    regs.forEach(r=>r.unregister());
-  }).then(()=>{
-    navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
-  });
-}
+  // Unregister old service workers
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.getRegistrations()
+      .then(regs=>{regs.forEach(r=>r.unregister());})
+      .then(()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
+  }
+});
 </script>
 </body>
 </html>
