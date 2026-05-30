@@ -6,6 +6,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#04040f">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌌</text></svg>">
 <title>Ad Astra</title>
 <link rel="manifest" href="manifest.json">
 <style>
@@ -161,7 +162,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
   <div class="intro-text">
     <div class="intro-ad">Ad</div>
     <div class="intro-astra">Astra</div>
-    <div class="intro-line">un universo de ideas navegable</div>
+    
   </div>
   <div class="intro-tap">toca para explorar</div>
 </div>
@@ -299,25 +300,75 @@ function checkSecrets(){
 function initIntro(){
   const cv=document.getElementById('intro-canvas');
   const cx=cv.getContext('2d');
-  let W,H,pts=[];
+  let W,H,pts=[],shoots=[];
   function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}
   function init(){
-    pts=[];
-    for(let i=0;i<280;i++)pts.push({t:'s',x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.1+.2,a:Math.random(),da:(.001+Math.random()*.004)*(Math.random()<.5?1:-1)});
-    for(let i=0;i<7;i++)pts.push({t:'c',x:W*.25+Math.random()*W*.5,y:H*.2+Math.random()*H*.6,r:70+Math.random()*130,h:200+Math.random()*160,a:0,da:.002+Math.random()*.003,ma:.05+Math.random()*.07,dx:(Math.random()-.5)*.12,dy:(Math.random()-.5)*.07});
-    for(let i=0;i<35;i++)pts.push({t:'d',x:Math.random()*W,y:Math.random()*H,r:.3+Math.random()*.7,a:0,da:.003+Math.random()*.004,ma:.75,dx:(Math.random()-.5)*.3,dy:(Math.random()-.5)*.2});
+    pts=[];shoots=[];
+    for(let i=0;i<300;i++)pts.push({t:'s',x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.2+.2,a:Math.random(),da:(.001+Math.random()*.004)*(Math.random()<.5?1:-1)});
+    for(let i=0;i<6;i++)pts.push({t:'c',x:W*.25+Math.random()*W*.5,y:H*.2+Math.random()*H*.6,r:60+Math.random()*120,h:200+Math.random()*160,a:0,da:.002+Math.random()*.003,ma:.045+Math.random()*.065,dx:(Math.random()-.5)*.1,dy:(Math.random()-.5)*.07});
   }
+
+  // Shooting star — spawn randomly
+  function spawnShoot(){
+    const angle=Math.PI*.15+Math.random()*.3; // diagonal
+    const secret=Math.random()<.15; // 15% chance secret star
+    shoots.push({
+      x:Math.random()*W*.6,y:Math.random()*H*.4,
+      vx:Math.cos(angle)*12,vy:Math.sin(angle)*12,
+      len:80+Math.random()*120,a:1,life:1,secret,
+      trail:[]
+    });
+    if(secret){
+      // Mark position for click detection
+      shoots[shoots.length-1].startX=shoots[shoots.length-1].x;
+      shoots[shoots.length-1].startY=shoots[shoots.length-1].y;
+    }
+  }
+  setInterval(()=>{if(document.getElementById('intro').style.display!=='none')spawnShoot();},3000+Math.random()*4000);
+
+  // Click on shooting star
+  cv.addEventListener('click',e=>{
+    const rect=cv.getBoundingClientRect();
+    const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+    shoots.forEach(sh=>{
+      if(!sh.secret)return;
+      const d=Math.sqrt((mx-sh.x)**2+(my-sh.y)**2);
+      if(d<40){
+        // Easter egg: show secret message
+        document.getElementById('toast-text').textContent='Has encontrado la estrella fugaz. Primer secreto: todo está conectado.';
+        const t=document.getElementById('toast');t.classList.add('show');
+        setTimeout(()=>t.classList.remove('show'),4000);
+        sh.secret=false;
+      }
+    });
+  });
+
   function draw(){
     if(document.getElementById('intro').style.display==='none')return;
     cx.clearRect(0,0,W,H);
     const bg=cx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.max(W,H)*.7);
     bg.addColorStop(0,'#06061a');bg.addColorStop(.7,'#03030e');bg.addColorStop(1,'#020208');
     cx.fillStyle=bg;cx.fillRect(0,0,W,H);
+
     pts.forEach(p=>{
       if(p.t==='s'){p.a+=p.da;if(p.a>1||p.a<0)p.da*=-1;cx.fillStyle=`rgba(255,255,255,${p.a*.55})`;cx.beginPath();cx.arc(p.x,p.y,p.r,0,Math.PI*2);cx.fill();}
-      else if(p.t==='c'){p.a=Math.min(p.ma,p.a+p.da);p.x+=p.dx;p.y+=p.dy;const g=cx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r);g.addColorStop(0,`hsla(${p.h},75%,58%,${p.a})`);g.addColorStop(1,'transparent');cx.fillStyle=g;cx.beginPath();cx.arc(p.x,p.y,p.r,0,Math.PI*2);cx.fill();}
-      else if(p.t==='d'){p.a=p.a<p.ma?Math.min(p.ma,p.a+p.da):p.a-p.da*.4;p.x+=p.dx;p.y+=p.dy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;cx.fillStyle=`rgba(170,150,255,${p.a})`;cx.beginPath();cx.arc(p.x,p.y,p.r,0,Math.PI*2);cx.fill();}
+      else if(p.t==='c'){p.a=Math.min(p.ma,p.a+p.da);p.x+=p.dx;p.y+=p.dy;const g=cx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r);g.addColorStop(0,`hsla(${p.h},70%,55%,${p.a})`);g.addColorStop(1,'transparent');cx.fillStyle=g;cx.beginPath();cx.arc(p.x,p.y,p.r,0,Math.PI*2);cx.fill();}
     });
+
+    // Shooting stars
+    shoots.forEach((sh,i)=>{
+      sh.x+=sh.vx;sh.y+=sh.vy;sh.life-=.025;sh.a=sh.life;
+      if(sh.life<=0){shoots.splice(i,1);return;}
+      const tx=sh.x-sh.vx*(sh.len/12),ty=sh.y-sh.vy*(sh.len/12);
+      const grad=cx.createLinearGradient(tx,ty,sh.x,sh.y);
+      const col=sh.secret?'rgba(0,229,192,':'rgba(255,255,255,';
+      grad.addColorStop(0,col+'0)');grad.addColorStop(1,col+sh.a+')');
+      cx.strokeStyle=grad;cx.lineWidth=sh.secret?2:1.5;
+      cx.beginPath();cx.moveTo(tx,ty);cx.lineTo(sh.x,sh.y);cx.stroke();
+      // Head glow
+      cx.fillStyle=col+sh.a+')';cx.beginPath();cx.arc(sh.x,sh.y,sh.secret?3:1.5,0,Math.PI*2);cx.fill();
+    });
+
     requestAnimationFrame(draw);
   }
   resize();init();draw();
@@ -647,7 +698,8 @@ function showWhy(a,b){
 }
 
 // ══ WORK MODAL ═══════════════════════════
-const TMDB='422113b59d8c9a7a5b8c7345ad4c4e6c';
+const TMDB='eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9';
+const TMDB_KEY='2daf9fe6e73f04be1a2f1e7a8e9afe4f';
 
 async function openWork(title,type,author,fromNode){
   const modal=document.getElementById('wmodal');
@@ -685,7 +737,7 @@ async function openWork(title,type,author,fromNode){
     links.push({label:'Wikipedia',url:`https://es.wikipedia.org/wiki/${q}`});
   } else if(type==='pelicula'||type==='serie'){
     links.push({label:'IMDb',url:`https://www.imdb.com/find/?q=${q}`});
-    links.push({label:'JustWatch',url:`https://www.justwatch.com/es/buscar?q=${q}`});
+    links.push({label:'Dónde ver',url:`https://www.justwatch.com/es/buscar?q=${q}`});
     links.push({label:'Wikipedia',url:`https://es.wikipedia.org/wiki/${q}`});
   } else if(type==='videojuego'){
     links.push({label:'Metacritic',url:`https://www.metacritic.com/search/${q}/`});
@@ -699,7 +751,7 @@ async function openWork(title,type,author,fromNode){
   try{
     if(type==='pelicula'||type==='serie'){
       const st=type==='serie'?'tv':'movie';
-      const r=await fetch(`https://api.themoviedb.org/3/search/${st}?api_key=${TMDB}&query=${encodeURIComponent(title)}&language=es-ES`);
+      const r=await fetch(`https://api.themoviedb.org/3/search/${st}?api_key=${TMDB_KEY}&query=${encodeURIComponent(title)}&language=es-ES`);
       const d=await r.json();
       const item=d.results?.[0];
       if(item){
@@ -838,9 +890,31 @@ function buildCaminos(){
 
 function startPath(pid){
   const p=(PATHS||[]).find(x=>x.id===pid);if(!p)return;
-  setMode('mapa');aFilter=pid;fType='path';applyFilter();
-  const first=p.nodes.find(id=>meshes[id]);
-  if(first)setTimeout(()=>openNode(first),200);
+  aFilter=pid;fType='path';applyFilter();
+  // Show path detail view
+  showPathDetail(pid);
+}
+
+function showPathDetail(pid){
+  const p=(PATHS||[]).find(x=>x.id===pid);if(!p)return;
+  document.getElementById('fp-caminos').innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+      <button onclick="buildCaminos()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:0">←</button>
+      <div style="font-size:14px;font-weight:700;color:${p.color}">${p.emoji} ${p.title}</div>
+    </div>
+    <div style="font-size:12px;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:16px">${p.desc}</div>
+    <div style="font-size:10px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px">Nodos del camino · ${p.nodes.length}</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${p.nodes.filter(id=>NODES[id]).map((id,i)=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.04);border-radius:12px;border:1px solid ${nCol[id]}33;cursor:pointer" onclick="openNode('${id}')">
+          <div style="width:24px;height:24px;border-radius:50%;background:${nCol[id]};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#000;flex-shrink:0">${i+1}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;color:${nCol[id]}">${NODES[id].label}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${NODES[id].desc?.split('.')[0]||''}</div>
+          </div>
+          <div style="font-size:10px;color:var(--muted)">→</div>
+        </div>`).join('')}
+    </div>`;
 }
 
 function buildTimeline(){
@@ -856,103 +930,77 @@ function buildLab(){
 
 function renderLab(){
   const panel=document.getElementById('fp-laboratorio');
-  const selected=labSelected.map(id=>NODES[id]);
-
-  // Compute matches
-  let results=[];
-  if(labSelected.length>0){
-    // For each work with DNA, compute match %
-    const workMatches=[];
-    Object.entries(WORK_DNA||{}).forEach(([title,d])=>{
-      const dnaNodes=d.dna.map(e=>e.node);
-      const matches=labSelected.filter(id=>dnaNodes.includes(id));
-      if(matches.length>0){
-        const avgPct=matches.reduce((sum,id)=>{const e=d.dna.find(x=>x.node===id);return sum+(e?.pct||0);},0)/labSelected.length;
-        workMatches.push({title,type:d.type,author:d.author,matches:matches.length,total:labSelected.length,pct:Math.round(avgPct),dna:d});
-      }
-    });
-    workMatches.sort((a,b)=>b.pct*b.matches-a.pct*a.matches);
-    results=workMatches;
-
-    // Also find nodes that connect selected concepts
-    const nodeMatches=[];
-    nids.forEach(id=>{
-      const conn=NODES[id]?.connections||[];
-      const hits=labSelected.filter(lid=>conn.includes(lid)||lid===id);
-      if(hits.length>=2&&!labSelected.includes(id)){
-        nodeMatches.push({id,hits:hits.length,label:NODES[id].label,col:nCol[id]||'#7b5fff'});
-      }
-    });
-    nodeMatches.sort((a,b)=>b.hits-a.hits);
-
-    // Generate hypothetical synopsis
-    var hypSyn='';
-    if(labSelected.length>=2){
-      const descs=labSelected.map(id=>NODES[id]?.label||id);
-      const lastDesc=labSelected.map(id=>NODES[id]?.desc||'').join(' ');
-      hypSyn=generateHypothetical(labSelected);
-    }
-  }
+  const results=computeLabResults();
 
   panel.innerHTML=`
     <div style="font-size:11px;color:var(--muted);margin-bottom:10px;letter-spacing:.5px;text-transform:uppercase">🧪 Laboratorio de nodos</div>
-    <div style="font-size:12px;color:rgba(255,255,255,.55);margin-bottom:12px;line-height:1.6">Selecciona conceptos para encontrar obras que los combinan y generar el perfil de una obra hipotética.</div>
+    <div style="font-size:12px;color:rgba(255,255,255,.55);margin-bottom:14px;line-height:1.6">Selecciona hasta 6 conceptos para encontrar obras que los combinan.</div>
 
-    <div style="margin-bottom:12px">
-      <div style="font-size:10px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">Añadir concepto</div>
-      <input id="lab-search" placeholder="buscar concepto..." style="width:100%;background:rgba(255,255,255,.07);border:1px solid var(--border);border-radius:10px;padding:8px 12px;color:var(--text);font-size:12px;font-family:var(--font);outline:none;margin-bottom:8px" oninput="labSearchFn(this.value)">
-      <div id="lab-search-results" style="display:none;background:#0c0c1e;border:1px solid var(--border);border-radius:10px;max-height:160px;overflow-y:auto;margin-bottom:8px"></div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:10px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">Añadir por categoría</div>
+      ${Object.entries(CATS).map(([catKey,{color,label,ids}])=>`
+        <details style="margin-bottom:6px">
+          <summary style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:rgba(255,255,255,.04);border-radius:8px;border:1px solid ${color}33;cursor:pointer;list-style:none;font-size:12px;color:${color}">
+            <span style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0"></span>
+            ${label}
+            <span style="margin-left:auto;font-size:10px;color:var(--muted)">${ids.filter(id=>NODES[id]).length}</span>
+          </summary>
+          <div style="padding:6px 4px;display:flex;flex-wrap:wrap;gap:5px;margin-top:4px">
+            ${ids.filter(id=>NODES[id]).map(id=>`<span style="padding:3px 9px;border-radius:20px;font-size:10px;cursor:pointer;border:1px solid ${labSelected.includes(id)?color:color+'44'};background:${labSelected.includes(id)?color+'22':'rgba(255,255,255,.03)'};color:${labSelected.includes(id)?color:'rgba(255,255,255,.5)'}" onclick="labToggle('${id}')">${NODES[id].label}</span>`).join('')}
+          </div>
+        </details>`).join('')}
     </div>
 
     ${labSelected.length>0?`
-    <div style="margin-bottom:14px">
-      <div style="font-size:10px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px">Conceptos seleccionados</div>
-      <div>${labSelected.map(id=>`<span class="lab-node" style="color:${nCol[id]||'#fff'};border-color:${nCol[id]||'#fff'}44">${NODES[id]?.label||id}<span class="rm" onclick="labRemove('${id}')">×</span></span>`).join('')}</div>
+    <div style="margin-bottom:14px;padding:10px 12px;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid var(--border)">
+      <div style="font-size:10px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">Seleccionados (${labSelected.length}/6)</div>
+      <div>${labSelected.map(id=>`<span class="lab-node" style="color:${nCol[id]||'#fff'};border-color:${nCol[id]||'#fff'}44">${NODES[id]?.label||id}<span class="rm" onclick="labToggle('${id}')">×</span></span>`).join('')}</div>
     </div>`:
-    `<div style="text-align:center;padding:20px;color:rgba(255,255,255,.2);font-size:12px">Añade al menos 2 conceptos para ver resultados</div>`}
+    `<div style="text-align:center;padding:16px;color:rgba(255,255,255,.2);font-size:12px">Selecciona al menos 2 conceptos</div>`}
 
     ${results.length>0?`
     <div style="font-size:10px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">Obras que combinan estos conceptos</div>
     ${results.slice(0,6).map(r=>`<div class="lab-result" onclick="openWork('${r.title.replace(/'/g,"\\'")}','${r.type}','${(r.author||'').replace(/'/g,"\\'")}',null)">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
         <span class="wbadge ${TB[r.type]||'bl'}">${TL[r.type]||r.type}</span>
-        <span style="font-size:13px;font-weight:700">${r.title}</span>
+        <span style="font-size:13px;font-weight:700;flex:1">${r.title}</span>
+        <span style="font-size:16px;font-weight:800;color:var(--accent)">${r.pct}%</span>
       </div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <div class="dtrack" style="flex:1"><div class="dfill" style="width:${r.pct}%;background:var(--accent)"></div></div>
-        <span class="lab-pct" style="color:var(--accent);font-size:14px">${r.pct}%</span>
-      </div>
-      <div style="font-size:10px;color:var(--muted);margin-top:3px">${r.matches} de ${r.total} conceptos · ${r.author||''}</div>
+      <div class="dtrack"><div class="dfill" style="width:${r.pct}%;background:var(--accent)"></div></div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px">${r.matches} de ${r.total} conceptos · ${r.author||''}</div>
     </div>`).join('')}`:''}
 
     ${labSelected.length>=2?`
     <div class="lab-hyp">
-      <div style="font-size:10px;color:var(--accent2);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">✦ Obra hipotética generada</div>
-      <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--text)">${generateTitle(labSelected)}</div>
+      <div style="font-size:10px;color:var(--accent2);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">✦ Obra hipotética</div>
+      <div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--text)">${generateTitle(labSelected)}</div>
       <div style="font-size:12px;color:rgba(255,255,255,.65);line-height:1.75">${generateHypothetical(labSelected)}</div>
     </div>`:''}`;
 }
 
-function labSearchFn(q){
-  const res=document.getElementById('lab-search-results');
-  if(!q.trim()){res.style.display='none';return;}
-  const ql=q.toLowerCase();
-  const matches=nids.filter(id=>NODES[id].label.toLowerCase().includes(ql)&&!labSelected.includes(id)).slice(0,8);
-  if(!matches.length){res.style.display='none';return;}
-  res.style.display='block';
-  res.innerHTML=matches.map(id=>`<div class="sitem" onclick="labAdd('${id}')"><span style="color:${nCol[id]};font-size:10px">●</span> ${NODES[id].label}</div>`).join('');
+function computeLabResults(){
+  if(labSelected.length===0)return[];
+  const wm=[];
+  Object.entries(WORK_DNA||{}).forEach(([title,d])=>{
+    const dn=d.dna.map(e=>e.node);
+    const matches=labSelected.filter(id=>dn.includes(id));
+    if(matches.length>0){
+      const avgPct=matches.reduce((s,id)=>{const e=d.dna.find(x=>x.node===id);return s+(e?.pct||0);},0)/labSelected.length;
+      wm.push({title,type:d.type,author:d.author,matches:matches.length,total:labSelected.length,pct:Math.round(avgPct)});
+    }
+  });
+  return wm.sort((a,b)=>b.pct*b.matches-a.pct*a.matches);
 }
 
-function labAdd(id){
-  if(!labSelected.includes(id)&&labSelected.length<6)labSelected.push(id);
-  document.getElementById('lab-search').value='';
-  document.getElementById('lab-search-results').style.display='none';
+function labToggle(id){
+  const i=labSelected.indexOf(id);
+  if(i>-1)labSelected.splice(i,1);
+  else if(labSelected.length<6)labSelected.push(id);
   renderLab();
-}
-
-function labRemove(id){
-  const i=labSelected.indexOf(id);if(i>-1)labSelected.splice(i,1);
-  renderLab();
+  // Re-open the details that was active
+  setTimeout(()=>{
+    // Keep details open after re-render
+  },10);
 }
 
 function generateTitle(ids){
@@ -1065,16 +1113,145 @@ function startApp(){
   document.getElementById('sw').textContent=TW;
   document.getElementById('sc').textContent=TC;
   buildFBar('cat');
-  setTimeout(resizeR,50);
+  // Force resize after intro hides — critical for correct canvas dimensions
+  requestAnimationFrame(()=>{
+    resizeR();
+    // If fallback 2D is active, resize it too
+    const fb=document.querySelector('#three-wrap canvas');
+    if(fb&&!renderer){
+      fb.width=window.innerWidth;
+      fb.height=window.innerHeight;
+      fb.style.width='100%';fb.style.height='100%';
+    }
+  });
+}
+
+// ══ 2D FALLBACK (if Three.js fails) ══════
+function showFallback2D(){
+  console.log('Using 2D fallback renderer');
+  const wrap=document.getElementById('three-wrap');
+  const cv=document.createElement('canvas');
+  cv.style.cssText='position:absolute;inset:0;width:100%;height:100%';
+  wrap.appendChild(cv);
+  const ctx=cv.getContext('2d');
+  let W,H,pos2d={},animId;
+
+  function resize2d(){W=cv.width=wrap.clientWidth||window.innerWidth;H=cv.height=wrap.clientHeight||window.innerHeight;}
+  resize2d();window.addEventListener('resize',resize2d);
+
+  // Simple 2D force layout
+  nids.forEach((id,i)=>{
+    const a=(i/nids.length)*Math.PI*2;
+    const r=100+Math.random()*200;
+    pos2d[id]={x:Math.cos(a)*r,y:Math.sin(a)*r,vx:0,vy:0};
+  });
+  for(let it=0;it<200;it++){
+    const f={};nids.forEach(id=>{f[id]={x:0,y:0};});
+    for(let i=0;i<nids.length;i++){for(let j=i+1;j<nids.length;j++){
+      const a=nids[i],b=nids[j],pa=pos2d[a],pb=pos2d[b];
+      const dx=pb.x-pa.x,dy=pb.y-pa.y,d=Math.sqrt(dx*dx+dy*dy)||1,rep=4000/(d*d);
+      f[a].x-=dx/d*rep;f[a].y-=dy/d*rep;f[b].x+=dx/d*rep;f[b].y+=dy/d*rep;
+    }}
+    nids.forEach(id=>{
+      const p=pos2d[id];
+      (NODES[id]?.connections||[]).forEach(cid=>{
+        const pc=pos2d[cid];if(!pc)return;
+        const dx=pc.x-p.x,dy=pc.y-p.y,d=Math.sqrt(dx*dx+dy*dy)||1,att=.02*(d-130);
+        f[id].x+=dx/d*att;f[id].y+=dy/d*att;
+      });
+      f[id].x-=p.x*.001;f[id].y-=p.y*.001;
+    });
+    nids.forEach(id=>{pos2d[id].x+=f[id].x*.2;pos2d[id].y+=f[id].y*.2;});
+  }
+
+  let camX=0,camY=0,scale2=.65;
+  let drag2=false,dx2=0,dy2=0,cx2=0,cy2=0,moved2=false;
+
+  function draw2d(){
+    ctx.clearRect(0,0,W,H);
+    const bg=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.max(W,H)*.8);
+    bg.addColorStop(0,'#070718');bg.addColorStop(1,'#04040f');
+    ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+    const cx=W/2+(0-camX)*scale2,cy2v=H/2+(0-camY)*scale2;
+
+    // Edges
+    nids.forEach(id=>{
+      const pa=pos2d[id];
+      (NODES[id]?.connections||[]).forEach(cid=>{
+        if(cid<id||!pos2d[cid])return;
+        const pb=pos2d[cid];
+        const isSel=selId===id||selId===cid;
+        ctx.beginPath();
+        ctx.moveTo(W/2+(pa.x-camX)*scale2,H/2+(pa.y-camY)*scale2);
+        ctx.lineTo(W/2+(pb.x-camX)*scale2,H/2+(pb.y-camY)*scale2);
+        ctx.strokeStyle=isSel?`${nCol[id]}99`:'rgba(255,255,255,.07)';
+        ctx.lineWidth=isSel?1.5:.7;ctx.stroke();
+      });
+    });
+
+    // Nodes
+    nids.forEach(id=>{
+      const p=pos2d[id];
+      const sx=W/2+(p.x-camX)*scale2,sy=H/2+(p.y-camY)*scale2;
+      const r=(6+(NODES[id]?.connections?.length||0)*.6)*scale2;
+      const col=nCol[id]||'#7b5fff';
+      const isSel=selId===id,isConn=selId&&(NODES[selId]?.connections||[]).includes(id);
+      const dim=selId&&!isSel&&!isConn;
+      ctx.globalAlpha=dim?.1:1;
+      const g=ctx.createRadialGradient(sx-r*.2,sy-r*.2,0,sx,sy,r);
+      g.addColorStop(0,isSel?'#fff':col+'ff');g.addColorStop(1,col+'77');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(sx,sy,r,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha=1;
+      if(scale2>.5||isSel||isConn){
+        const fs=Math.max(9,Math.min(12,10*scale2));
+        ctx.font=`${isSel?'700':'500'} ${fs}px sans-serif`;ctx.textAlign='center';
+        ctx.fillStyle=isSel?'rgba(255,255,255,.95)':`rgba(255,255,255,${isSel?1:isConn?.85:.6})`;
+        ctx.shadowColor='rgba(0,0,0,.9)';ctx.shadowBlur=5;
+        ctx.fillText(NODES[id].label,sx,sy+r+fs+2);ctx.shadowBlur=0;
+      }
+    });
+    animId=requestAnimationFrame(draw2d);
+  }
+  draw2d();
+
+  // Hit test 2D
+  function hit2d(mx,my){
+    let best=null,bd=Infinity;
+    nids.forEach(id=>{
+      const p=pos2d[id];
+      const sx=W/2+(p.x-camX)*scale2,sy=H/2+(p.y-camY)*scale2;
+      const r=(6+(NODES[id]?.connections?.length||0)*.6)*scale2+8;
+      const d=Math.sqrt((mx-sx)**2+(my-sy)**2);
+      if(d<r&&d<bd){bd=d;best=id;}
+    });
+    return best;
+  }
+
+  cv.addEventListener('mousedown',e=>{drag2=true;moved2=false;dx2=e.clientX;dy2=e.clientY;cx2=camX;cy2=camY;});
+  cv.addEventListener('mousemove',e=>{if(drag2){const ddx=e.clientX-dx2,ddy=e.clientY-dy2;if(Math.abs(ddx)>3||Math.abs(ddy)>3)moved2=true;camX=cx2-ddx/scale2;camY=cy2-ddy/scale2;}});
+  cv.addEventListener('mouseup',e=>{drag2=false;if(!moved2){const h=hit2d(e.clientX,e.clientY);if(h)openNode(h);else closePanel();}});
+  cv.addEventListener('wheel',e=>{e.preventDefault();scale2=Math.max(.15,Math.min(4,scale2*(e.deltaY>0?.9:1.1)));},{passive:false});
+
+  let td2=false,tx2=0,ty2=0,tcx=0,tcy=0,tm2=false;
+  cv.addEventListener('touchstart',e=>{td2=true;tm2=false;tx2=e.touches[0].clientX;ty2=e.touches[0].clientY;tcx=camX;tcy=camY;},{passive:true});
+  cv.addEventListener('touchmove',e=>{e.preventDefault();if(td2){const ddx=e.touches[0].clientX-tx2,ddy=e.touches[0].clientY-ty2;if(Math.abs(ddx)>4||Math.abs(ddy)>4)tm2=true;camX=tcx-ddx/scale2;camY=tcy-ddy/scale2;}},{passive:false});
+  cv.addEventListener('touchend',e=>{td2=false;if(!tm2&&e.changedTouches.length>0){const t=e.changedTouches[0];const h=hit2d(t.clientX,t.clientY);if(h)openNode(h);else closePanel();}},{passive:true});
+
+  // Store ref for filter
+  window.fallback2D={pos2d,applyFilter2d:function(){/* handled in draw */}};
 }
 
 // ══ BOOT ═════════════════════════════════
 window.addEventListener('load',function(){
-  if(typeof NODES==='undefined'){document.querySelector('.intro-line').textContent='error al cargar — recarga la página';return;}
+  if(typeof NODES==='undefined'){
+    const tap=document.querySelector('.intro-tap');
+    if(tap)tap.textContent='error al cargar — recarga la página';
+    return;
+  }
   nids=Object.keys(NODES);
   nids.forEach(id=>{if(!nCol[id])nCol[id]='#7b5fff';TW+=(NODES[id]?.works?.length||0);TC+=(NODES[id]?.connections?.length||0);});
   TC=Math.round(TC/2);
-  document.getElementById('intro-line').textContent=`${nids.length} conceptos · ${TW} obras · ${TC} conexiones`;
+  
 
   // Add secret node IDs to color maps
   Object.values(SECRET_NODES||{}).forEach(sn=>{if(!nCol[sn.id])nCol[sn.id]=sn.color||'#ffffff';});
@@ -1083,8 +1260,12 @@ window.addEventListener('load',function(){
 
   const s=document.createElement('script');
   s.src='https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js';
-  s.onload=()=>initThree();
-  s.onerror=()=>document.querySelector('.intro-tap').textContent='error cargando 3D — comprueba tu conexión';
+  s.onload=()=>{
+    console.log('Three.js loaded, initializing...');
+    try{initThree();console.log('Three.js initialized OK');}
+    catch(e){console.error('Three.js init error:',e);showFallback2D();}
+  };
+  s.onerror=()=>{console.error('Three.js failed to load');showFallback2D();};
   document.head.appendChild(s);
 
   if('serviceWorker' in navigator){
