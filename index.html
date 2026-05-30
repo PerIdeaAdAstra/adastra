@@ -15,6 +15,14 @@
 html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font)}
 #label-overlay{position:fixed;inset:0;pointer-events:none;z-index:5;overflow:hidden}
 .nlabel{position:absolute;transform:translate(-50%,-100%);font-size:11px;font-weight:600;color:#fff;text-shadow:0 0 8px rgba(0,0,0,1),0 0 4px rgba(0,0,0,1);white-space:nowrap;pointer-events:none;transition:opacity .2s}
+/* LEGEND */
+#legend{position:fixed;left:12px;bottom:66px;z-index:19;transition:left .32s;background:rgba(4,4,15,.75);padding:8px 10px;border-radius:10px;border:1px solid var(--border);backdrop-filter:blur(4px)}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:10px;color:rgba(255,255,255,.45);margin-bottom:3px;cursor:pointer;transition:color .15s;white-space:nowrap}
+.leg-item:last-child{margin-bottom:0}
+.leg-item:hover{color:rgba(255,255,255,.9)}
+.leg-item.on{color:#fff;font-weight:600}
+.leg-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
 
 /* INTRO */
 .intro{position:fixed;inset:0;z-index:50;overflow:hidden;cursor:pointer}
@@ -38,7 +46,9 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .sitem{padding:9px 12px;font-size:12px;cursor:pointer;border-bottom:1px solid var(--border)}
 .sitem:hover{background:rgba(123,95,255,.15)}
 .sitem:last-child{border-bottom:none}
-.ibtn{background:rgba(255,255,255,.07);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:13px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ibtn{background:rgba(255,255,255,.07);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:13px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.mmbtn.active{background:rgba(123,95,255,.25);border-color:var(--accent);color:var(--text)}
+.mmbtn:hover{background:rgba(255,255,255,.12)}
 
 /* MODE BAR */
 .mbar{position:fixed;top:48px;left:0;right:0;z-index:18;display:flex;background:rgba(4,4,15,.93);border-bottom:1px solid var(--border);transition:right .32s;overflow-x:auto;scrollbar-width:none}
@@ -47,8 +57,9 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .mbtn.active{color:var(--text);border-bottom-color:var(--accent)}
 
 /* FILTER BAR */
-.fbar{position:fixed;top:86px;left:0;right:0;z-index:17;display:flex;gap:5px;padding:5px 10px;overflow-x:auto;scrollbar-width:none;background:linear-gradient(to bottom,rgba(4,4,15,.75),transparent);transition:right .32s}
-.fbar::-webkit-scrollbar{display:none}
+.fbar{position:fixed;top:86px;left:0;right:0;z-index:17;display:flex;flex-direction:column;gap:0;padding:5px 10px;overflow:hidden;background:linear-gradient(to bottom,rgba(4,4,15,.88),rgba(4,4,15,.5));transition:right .32s}
+.fbar>div{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding:3px 0}
+.fbar>div::-webkit-scrollbar{display:none}
 .fchip{display:flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);font-size:10px;white-space:nowrap;cursor:pointer;transition:all .15s;flex-shrink:0}
 .fchip.on{color:#fff;border-color:var(--cc);background:rgba(255,255,255,.06)}
 .fchip .dot{width:6px;height:6px;border-radius:50%;background:var(--cc);flex-shrink:0}
@@ -92,7 +103,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .dfill{height:100%;border-radius:3px}
 
 /* FULL PANELS */
-.fpanel{position:fixed;top:86px;left:0;right:0;bottom:52px;z-index:15;overflow-y:auto;padding:10px 14px;display:none;background:rgba(4,4,15,.97);backdrop-filter:blur(8px)}
+.fpanel{position:fixed;top:120px;left:0;right:0;bottom:52px;z-index:15;overflow-y:auto;padding:10px 14px;display:none;background:rgba(4,4,15,.97);backdrop-filter:blur(8px)}
 .pcard{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer}
 .pcard:hover{background:rgba(255,255,255,.07)}
 .pnodes{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
@@ -172,16 +183,22 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 <div id="three-wrap"></div>
 <div id="label-overlay"></div>
 <div id="map-dim" style="position:fixed;inset:0;z-index:14;background:rgba(4,4,15,.7);opacity:0;transition:opacity .3s;pointer-events:none"></div>
+<div id="legend" style="display:none"></div>
 
 <!-- HEADER -->
 <div class="hdr" id="hdr" style="display:none">
-  <div class="logo"><span style="cursor:pointer;color:rgba(255,255,255,.7)" onclick="setMapMode('galaxy')" title="Vista Galaxia">Ad</span> <span style="cursor:pointer" onclick="setMapMode('journey')" title="Modo Viaje">Astra</span></div>
+  <div class="logo">Ad <span>Astra</span></div>
   <div class="sbox">
     <span class="sicon">🔍</span>
     <input class="sinput" id="sinput" placeholder="concepto, obra o autor..." autocomplete="off" oninput="onSearch(this.value)" onfocus="onSearch(this.value)">
     <div class="sresults" id="sresults" style="display:none"></div>
   </div>
-  <button class="ibtn" onclick="resetView()" title="resetear vista">⟳</button>
+  <button class="ibtn" onclick="resetView()" title="resetear">⟳</button>
+  <div style="display:flex;gap:3px;flex-shrink:0" id="map-mode-btns">
+    <button class="ibtn mmbtn active" id="mm-normal" onclick="setMapMode('normal')" title="Vista normal — grafo libre">🌐</button>
+    <button class="ibtn mmbtn" id="mm-galaxy" onclick="setMapMode('galaxy')" title="Vista galaxia — conceptos agrupados por categoría">🌌</button>
+    <button class="ibtn mmbtn" id="mm-journey" onclick="setMapMode('journey')" title="Modo viaje — exploración automática">🚀</button>
+  </div>
 </div>
 
 <!-- MODE BAR -->
@@ -275,6 +292,7 @@ Object.entries(CATS).forEach(([k,{ids,color}])=>ids.forEach(id=>{nCol[id]=color;
 
 let nids=[],TW=0,TC=0;
 let aFilter=null,fType=null,selId=null;
+let wTypeFilter=null; // global work type filter: 'libro'|'pelicula'|'serie'|'comic'|'videojuego'
 const prof=JSON.parse(localStorage.getItem('aa-prof')||'{}');
 const visited=new Set(JSON.parse(localStorage.getItem('aa-vis')||'[]'));
 const labSelected=[];
@@ -533,6 +551,11 @@ function addSecretMesh(id){
   makeMesh(id);
 }
 
+// Top 20 most connected nodes — always show labels
+const topNodes=new Set(
+  [...nids].sort((a,b)=>(NODES[b]?.connections?.length||0)-(NODES[a]?.connections?.length||0)).slice(0,20)
+);
+
 function updateLabels(){
   const T=window.THREE;if(!T||!camera||!renderer)return;
   const W=renderer.domElement.width/window.devicePixelRatio;
@@ -543,27 +566,41 @@ function updateLabels(){
   nids.forEach(id=>{
     const lbl=labels[id];if(!lbl)return;
     const p=pos3d[id];if(!p)return;
-    const mesh=meshes[id];
     const isSel=selId===id;
     const isConn=selId&&(NODES[selId]?.connections||[]).includes(id);
-    const show=isSel||isConn||(oR<600);
+    const isTop=topNodes.has(id);
+    const show=isSel||isConn||isTop||(oR<550);
     if(!show){lbl.style.opacity='0';return;}
 
-    // Project to screen
-    const vec=new T.Vector3(p.x,p.y,p.z);
+    const vec=new THREE.Vector3(p.x,p.y,p.z);
     vec.project(camera);
     const sx=(vec.x*.5+.5)*W;
     const sy=(-.5*vec.y+.5)*H;
-    // Hide if behind camera
     if(vec.z>1){lbl.style.opacity='0';return;}
-    // Hide if outside visible area
-    if(sx<0||sx>W-pw||sy<0||sy>H){lbl.style.opacity='0';return;}
+    if(sx<0||sx>W-pw||sy<20||sy>H-60){lbl.style.opacity='0';return;}
 
     lbl.style.left=sx+'px';
-    lbl.style.top=(sy-8)+'px';
-    lbl.style.opacity=isSel?'1':isConn?'.9':'.55';
-    lbl.style.fontSize=isSel?'13px':'10px';
-    lbl.style.fontWeight=isSel?'700':'500';
+    lbl.style.top=(sy-10)+'px';
+    lbl.style.opacity=isSel?'1':isConn?'.9':isTop?'.6':'.45';
+    lbl.style.fontSize=isSel?'13px':isConn?'11px':'10px';
+    lbl.style.fontWeight=isSel||isConn?'700':'500';
+  });
+}
+
+function buildLegend(){
+  const leg=document.getElementById('legend');
+  if(!leg)return;
+  leg.innerHTML=Object.entries(CATS).map(([k,{color,label}])=>`
+    <div class="leg-item" id="leg-${k}" onclick="setFilter('${k}','cat');setMode('mapa')" style="--lc:${color}">
+      <span class="leg-dot" style="background:${color}"></span>${label}
+    </div>`).join('');
+  leg.style.display='block';
+}
+
+function updateLegend(){
+  Object.keys(CATS).forEach(k=>{
+    const el=document.getElementById('leg-'+k);
+    if(el)el.classList.toggle('on',aFilter===k);
   });
 }
 
@@ -646,6 +683,11 @@ function hlNode(id){
   if(p){const len=Math.sqrt(p.x*p.x+p.y*p.y+p.z*p.z)||1;tPhi=Math.acos(Math.max(-1,Math.min(1,p.y/len)));tTheta=Math.atan2(p.x,p.z);tR=580;}
 }
 
+function nodeHasWorkType(id,wt){
+  if(!wt)return true;
+  return (NODES[id]?.works||[]).some(w=>w.type===wt);
+}
+
 function applyFilter(){
   Object.entries(meshes).forEach(([id,m])=>{
     let vis=true;
@@ -654,6 +696,8 @@ function applyFilter(){
       else if(fType==='sens')vis=(SENSATIONS[aFilter]?.nodes||[]).includes(id);
       else if(fType==='path'){const p=(PATHS||[]).find(x=>x.id===aFilter);vis=p?p.nodes.includes(id):true;}
     }
+    // Apply work type filter on top
+    if(vis&&wTypeFilter)vis=nodeHasWorkType(id,wTypeFilter);
     m.material.opacity=vis?1:.04;m.material.transparent=!vis;
   });
   Object.values(edges).forEach(l=>{
@@ -713,7 +757,7 @@ function closePanel(){
 function shiftUI(open){
   const pw=open&&window.innerWidth>680?Math.min(420,Math.round(window.innerWidth*.42)):0;
   const v=pw?pw+'px':'0';
-  ['three-wrap','hdr','mbar','fbar','zoom','stats'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.right=v;});
+  ['three-wrap','hdr','mbar','fbar','zoom','stats','legend'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.right=v;});
   setTimeout(resizeR,340);
 }
 
@@ -730,17 +774,39 @@ function showWhy(a,b){
 const TMDB='eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9';
 const TMDB_KEY='2daf9fe6e73f04be1a2f1e7a8e9afe4f';
 
+// ══ TRANSLATION HELPER ══════════════════
+async function translate(text){
+  if(!text||text.length<10)return text;
+  try{
+    // Split into chunks of 500 chars
+    const chunks=[];
+    for(let i=0;i<text.length;i+=480)chunks.push(text.slice(i,i+480));
+    const translated=await Promise.all(chunks.map(async chunk=>{
+      const r=await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(chunk)}&langpair=en|es`);
+      const d=await r.json();
+      return d.responseData?.translatedText||chunk;
+    }));
+    return translated.join(' ');
+  }catch(e){return text;}
+}
+
+function setCover(html){document.getElementById('wm-cover').innerHTML=html;}
+function setSyn(text){document.getElementById('wm-syn').textContent=text;}
+function coverImg(src,type){return `<img class="wmcover" style="object-fit:contain;background:#111" src="${src}" onerror="this.parentNode.innerHTML='<div class=\"wmph\">${TE[type]||'📖'}</div>'">`;}
+
+// ══ OPEN WORK ════════════════════════════
 async function openWork(title,type,author,fromNode){
   const modal=document.getElementById('wmodal');
-  document.getElementById('wm-cover').innerHTML=`<div class="wmph">${TE[type]||'📖'}</div>`;
+  setCover(`<div class="wmph">${TE[type]||'📖'}</div>`);
   document.getElementById('wm-badge').innerHTML=`<span class="wbadge ${TB[type]||'bl'}">${TL[type]||type}</span>`;
   document.getElementById('wm-title').textContent=title;
   document.getElementById('wm-meta').textContent=author||'';
   document.getElementById('wm-dna').innerHTML='';
-  document.getElementById('wm-syn').textContent='Cargando...';
+  setSyn('Cargando...');
   document.getElementById('wm-links').innerHTML='';
   modal.style.display='flex';
 
+  // DNA
   const dna=(WORK_DNA||{})[title];
   if(dna){
     document.getElementById('wm-dna').innerHTML=`
@@ -756,13 +822,14 @@ async function openWork(title,type,author,fromNode){
       </div>`;
   }
 
-  // Build links
-  const q=encodeURIComponent(title);
-  const aq=encodeURIComponent(author||'');
+  // External links
+  const q=encodeURIComponent(title),aq=encodeURIComponent(author||'');
+  const sfeSlug=title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
   const links=[];
   if(type==='libro'){
     links.push({label:'Goodreads',url:`https://www.goodreads.com/search?q=${q}+${aq}`});
     links.push({label:'Open Library',url:`https://openlibrary.org/search?q=${q}`});
+    links.push({label:'SFE',url:`https://sf-encyclopedia.com/entry/${sfeSlug}`});
     links.push({label:'Wikipedia',url:`https://es.wikipedia.org/wiki/${q}`});
   } else if(type==='pelicula'||type==='serie'){
     links.push({label:'IMDb',url:`https://www.imdb.com/find/?q=${q}`});
@@ -776,125 +843,203 @@ async function openWork(title,type,author,fromNode){
   }
   document.getElementById('wm-links').innerHTML=links.map(l=>`<a class="extlink" href="${l.url}" target="_blank" rel="noopener">${l.label} ↗</a>`).join('');
 
-  // Fetch cover + synopsis
   try{
     if(type==='pelicula'||type==='serie'){
-      const st=type==='serie'?'tv':'movie';
-      const r=await fetch(`https://api.themoviedb.org/3/search/${st}?api_key=${TMDB_KEY}&query=${encodeURIComponent(title)}&language=es-ES`);
-      const d=await r.json();
-      const item=d.results?.[0];
-      if(item){
-        if(item.poster_path)document.getElementById('wm-cover').innerHTML=`<img class="wmcover" style="object-fit:contain;background:#111" src="https://image.tmdb.org/t/p/w500${item.poster_path}" onerror="this.parentNode.innerHTML='<div class=\\'wmph\\'>${TE[type]}</div>'">`;
-        document.getElementById('wm-syn').textContent=item.overview||'Sinopsis no disponible en español.';
-        if(item.id){
-          // Add TMDB link
-          const tmdbUrl=`https://www.themoviedb.org/${st}/${item.id}`;
-          document.getElementById('wm-links').innerHTML+=`<a class="extlink" href="${tmdbUrl}" target="_blank" rel="noopener">TMDB ↗</a>`;
-        }
-      }
+      await fetchFilmWork(title,type,author);
+    } else if(type==='libro'){
+      await fetchBookWork(title,type,author);
     } else {
-      // Books: try Open Library first (best for book covers)
-      let covered=false;
-      try{
-        // Search Open Library by title
-        const olQ=encodeURIComponent(title);
-        const olR=await fetch(`https://openlibrary.org/search.json?q=${olQ}&limit=1&fields=cover_i,key`);
-        if(olR.ok){
-          const olD=await olR.json();
-          const coverId=olD.docs?.[0]?.cover_i;
-          if(coverId){
-            document.getElementById('wm-cover').innerHTML=`<img class="wmcover" style="object-fit:contain;background:#111" src="https://covers.openlibrary.org/b/id/${coverId}-L.jpg" onerror="this.parentNode.innerHTML='<div class=\\'wmph\\'>${TE[type]||'📖'}</div>'">`;
-            covered=true;
-          }
-        }
-      }catch(e){}
-
-      // Wikipedia for synopsis — search with author to avoid disambiguation
-      const wikiTitle=author?`${title.replace(/ /g,'_')}_(novela)`:`${title.replace(/ /g,'_')}`;
-      const wq=encodeURIComponent(wikiTitle);
-      const wqBase=encodeURIComponent(title.replace(/ /g,'_'));
-      try{
-        // Try specific page first, fall back to base title
-        let r=await fetch(`https://es.wikipedia.org/api/rest_v1/page/summary/${wq}`);
-        if(!r.ok||r.url.includes('desambiguaci'))r=await fetch(`https://es.wikipedia.org/api/rest_v1/page/summary/${wqBase}`);
-        if(r.ok){
-          const d=await r.json();
-          if(!covered&&d.thumbnail?.source)document.getElementById('wm-cover').innerHTML=`<img class="wmcover" style="object-fit:contain;background:#111" src="${d.thumbnail.source}" style="object-fit:cover;object-position:top" onerror="this.parentNode.innerHTML='<div class=\\'wmph\\'>${TE[type]||'📖'}</div>'">`;
-          if(d.extract)document.getElementById('wm-syn').textContent=d.extract;
-          else await tryEnWiki(title,type,covered);
-        } else await tryEnWiki(title,type,covered);
-      }catch(e){await tryEnWiki(title,type,covered);}
+      await fetchGenericWork(title,type,author);
     }
-  }catch(e){document.getElementById('wm-syn').textContent='No se pudo cargar la sinopsis.';}
+  }catch(e){setSyn('No se pudo cargar la sinopsis.');}
 }
 
-async function tryEnWiki(title,type,covered=false){
+async function fetchFilmWork(title,type,author){
+  const st=type==='serie'?'tv':'movie';
+  // TMDB ES
+  try{
+    const r=await fetch(`https://api.themoviedb.org/3/search/${st}?api_key=${TMDB_KEY}&query=${encodeURIComponent(title)}&language=es-ES`);
+    const d=await r.json();
+    const item=d.results?.[0];
+    if(item){
+      if(item.poster_path)setCover(coverImg(`https://image.tmdb.org/t/p/w500${item.poster_path}`,type));
+      if(item.overview&&item.overview.length>20){setSyn(item.overview);return;}
+    }
+  }catch(e){}
+  // TMDB EN + translate
+  try{
+    const r=await fetch(`https://api.themoviedb.org/3/search/${st}?api_key=${TMDB_KEY}&query=${encodeURIComponent(title)}&language=en-US`);
+    const d=await r.json();
+    const item=d.results?.[0];
+    if(item){
+      if(item.poster_path&&document.getElementById('wm-cover').querySelector('.wmph'))setCover(coverImg(`https://image.tmdb.org/t/p/w500${item.poster_path}`,type));
+      if(item.overview){const t=await translate(item.overview);setSyn(t);return;}
+      if(item.id){document.getElementById('wm-links').innerHTML+=`<a class="extlink" href="https://www.themoviedb.org/${st}/${item.id}" target="_blank" rel="noopener">TMDB ↗</a>`;}
+    }
+  }catch(e){}
+  // Wikipedia fallback
+  await fetchWikiWork(title,type,false);
+}
+
+async function fetchBookWork(title,type,author){
+  let covered=false;
+  // 1. Open Library — cover + description
+  try{
+    const r=await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(title)}&limit=1&fields=cover_i,key,first_sentence`);
+    if(r.ok){
+      const d=await r.json();
+      const doc=d.docs?.[0];
+      if(doc?.cover_i){
+        setCover(coverImg(`https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`,type));
+        covered=true;
+      }
+      // Open Library description
+      if(doc?.key){
+        try{
+          const wr=await fetch(`https://openlibrary.org${doc.key}.json`);
+          if(wr.ok){
+            const wd=await wr.json();
+            const desc=typeof wd.description==='string'?wd.description:wd.description?.value;
+            if(desc&&desc.length>30){
+              const t=await translate(desc.slice(0,600));
+              setSyn(t);return;
+            }
+          }
+        }catch(e){}
+      }
+    }
+  }catch(e){}
+
+  // 2. Google Books — synopsis
+  try{
+    const q=author?`intitle:${encodeURIComponent(title)}+inauthor:${encodeURIComponent(author.split(' ').pop())}`:`intitle:${encodeURIComponent(title)}`;
+    const r=await fetch(`https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=1&fields=items/volumeInfo(description,imageLinks)`);
+    if(r.ok){
+      const d=await r.json();
+      const info=d.items?.[0]?.volumeInfo;
+      if(info?.imageLinks?.thumbnail&&!covered){
+        setCover(coverImg(info.imageLinks.thumbnail.replace('http://','https://').replace('zoom=1','zoom=2'),type));
+        covered=true;
+      }
+      if(info?.description&&info.description.length>30){
+        const t=await translate(info.description.slice(0,600));
+        setSyn(t);return;
+      }
+    }
+  }catch(e){}
+
+  // 3. Wikipedia ES
+  await fetchWikiWork(title,type,covered);
+}
+
+async function fetchGenericWork(title,type,author){
+  await fetchWikiWork(title,type,false);
+}
+
+async function fetchWikiWork(title,type,covered){
+  // Try ES first
   try{
     const wq=encodeURIComponent(title.replace(/ /g,'_'));
-    const r=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${wq}`);
-    if(!r.ok){document.getElementById('wm-syn').textContent='Sinopsis no disponible.';return;}
-    const d=await r.json();
-    if(!covered&&d.thumbnail?.source)document.getElementById('wm-cover').innerHTML=`<img class="wmcover" style="object-fit:contain;background:#111" src="${d.thumbnail.source}" style="object-fit:cover;object-position:top" onerror="this.parentNode.innerHTML='<div class=\\'wmph\\'>${TE[type]||'📖'}</div>'">`;
-    if(d.extract){
-      // Translate
-      const tr=await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(d.extract.slice(0,500))}&langpair=en|es`);
-      const td=await tr.json();
-      document.getElementById('wm-syn').textContent=td.responseData?.translatedText||d.extract;
-    }
-  }catch(e){document.getElementById('wm-syn').textContent='Sinopsis no disponible.';}
-}
-
-async function openAuthor(author){
-  if(!author)return;
-  const modal=document.getElementById('wmodal');
-  document.getElementById('wm-cover').innerHTML=`<div class="wmph">✍️</div>`;
-  document.getElementById('wm-badge').innerHTML=`<span class="wbadge bl">✍️ Autor</span>`;
-  document.getElementById('wm-title').textContent=author;
-  document.getElementById('wm-meta').textContent='';
-  document.getElementById('wm-syn').textContent='Cargando biografía...';
-
-  // All works by author in catalog
-  const aw=[];
-  nids.forEach(id=>(NODES[id]?.works||[]).forEach(w=>{if(w.author===author&&!aw.find(x=>x.title===w.title))aw.push(w);}));
-  document.getElementById('wm-dna').innerHTML=aw.length?`
-    <div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
-      <div class="psec" style="margin-top:0">obras en el mapa</div>
-      <div class="wlist">${aw.map(w=>`<div class="wcard" onclick="openWork('${w.title.replace(/'/g,"\\'").replace(/"/g,"&quot;")}','${w.type}','${author.replace(/'/g,"\\'")}',null)">
-        <span class="wbadge ${TB[w.type]||'bl'}">${TL[w.type]||w.type}</span>
-        <div class="winfo"><div class="wt">${w.title}</div></div>
-      </div>`).join('')}
-      </div>
-    </div>`:'';
-
-  // Links for author
-  const aq=encodeURIComponent(author);
-  document.getElementById('wm-links').innerHTML=`
-    <a class="extlink" href="https://es.wikipedia.org/wiki/${aq}" target="_blank" rel="noopener">Wikipedia ↗</a>
-    <a class="extlink" href="https://www.goodreads.com/search?q=${aq}" target="_blank" rel="noopener">Goodreads ↗</a>
-    <a class="extlink" href="https://www.google.com/search?q=${aq}+autor+ciencia+ficcion" target="_blank" rel="noopener">Buscar ↗</a>`;
-
-  modal.style.display='flex';
-
-  try{
-    const wq=encodeURIComponent(author.replace(/ /g,'_'));
     const r=await fetch(`https://es.wikipedia.org/api/rest_v1/page/summary/${wq}`);
     if(r.ok){
       const d=await r.json();
-      if(!covered&&d.thumbnail?.source)document.getElementById('wm-cover').innerHTML=`<img class="wmcover" style="object-fit:contain;background:#111" src="${d.thumbnail.source}" style="object-fit:cover;object-position:top 20%">`;
-      if(d.extract)document.getElementById('wm-syn').textContent=d.extract;
-    } else {
-      const re=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${wq}`);
-      if(re.ok){
-        const de=await re.json();
-        if(de.thumbnail?.source)document.getElementById('wm-cover').innerHTML=`<img class="wmcover" style="object-fit:contain;background:#111" src="${de.thumbnail.source}" style="object-fit:cover;object-position:top 20%">`;
-        if(de.extract){
-          const tr=await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(de.extract.slice(0,500))}&langpair=en|es`);
-          const td=await tr.json();
-          document.getElementById('wm-syn').textContent=td.responseData?.translatedText||de.extract;
+      // Skip disambiguation pages
+      if(!d.type?.includes('disambig')&&d.extract&&d.extract.length>50){
+        if(!covered&&d.thumbnail?.source)setCover(coverImg(d.thumbnail.source,type));
+        setSyn(d.extract);return;
+      }
+    }
+  }catch(e){}
+  // Try EN + translate
+  try{
+    const wq=encodeURIComponent(title.replace(/ /g,'_'));
+    const r=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${wq}`);
+    if(r.ok){
+      const d=await r.json();
+      if(!d.type?.includes('disambig')&&d.extract&&d.extract.length>50){
+        if(!covered&&d.thumbnail?.source)setCover(coverImg(d.thumbnail.source,type));
+        const t=await translate(d.extract.slice(0,600));
+        setSyn(t);return;
+      }
+    }
+  }catch(e){}
+  setSyn('Sinopsis no disponible.');
+}
+
+async function tryEnWiki(title,type,covered=false){
+  await fetchWikiWork(title,type,covered);
+}
+
+// ══ OPEN AUTHOR ══════════════════════════
+async function openAuthor(author){
+  if(!author)return;
+  const modal=document.getElementById('wmodal');
+  setCover(`<div class="wmph">✍️</div>`);
+  document.getElementById('wm-badge').innerHTML=`<span class="wbadge bl">✍️ Autor</span>`;
+  document.getElementById('wm-title').textContent=author;
+  document.getElementById('wm-meta').textContent='';
+  setSyn('Cargando biografía...');
+  document.getElementById('wm-dna').innerHTML='';
+
+  // Works in catalog
+  const aw=[];
+  nids.forEach(id=>(NODES[id]?.works||[]).forEach(w=>{
+    if(w.author===author&&!aw.find(x=>x.title===w.title))aw.push(w);
+  }));
+
+  if(aw.length){
+    document.getElementById('wm-dna').innerHTML=`
+      <div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+        <div class="psec" style="margin-top:0">obras en el mapa · ${aw.length}</div>
+        <div class="wlist">${aw.map(w=>`<div class="wcard" onclick="openWork('${w.title.replace(/'/g,"\'").replace(/"/g,'&quot;')}','${w.type}','${author.replace(/'/g,"\'")}',null)">
+          <span class="wbadge ${TB[w.type]||'bl'}">${TL[w.type]||w.type}</span>
+          <div class="winfo"><div class="wt">${w.title}</div></div>
+        </div>`).join('')}</div>
+      </div>`;
+  }
+
+  // Links
+  const aq=encodeURIComponent(author);
+  const sfeSlug=author.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  document.getElementById('wm-links').innerHTML=`
+    <a class="extlink" href="https://sf-encyclopedia.com/entry/${sfeSlug}" target="_blank" rel="noopener">SFE ↗</a>
+    <a class="extlink" href="https://www.goodreads.com/search?q=${aq}" target="_blank" rel="noopener">Goodreads ↗</a>
+    <a class="extlink" href="https://es.wikipedia.org/wiki/${aq}" target="_blank" rel="noopener">Wikipedia ↗</a>
+    <a class="extlink" href="https://www.google.com/search?q=${aq}+science+fiction+author" target="_blank" rel="noopener">Buscar ↗</a>`;
+
+  modal.style.display='flex';
+
+  // Bio: ES Wikipedia first, then EN + translate
+  try{
+    const wq=encodeURIComponent(author.replace(/ /g,'_'));
+    let gotBio=false;
+    // ES
+    try{
+      const r=await fetch(`https://es.wikipedia.org/api/rest_v1/page/summary/${wq}`);
+      if(r.ok){
+        const d=await r.json();
+        if(!d.type?.includes('disambig')&&d.extract&&d.extract.length>50){
+          if(d.thumbnail?.source)setCover(coverImg(d.thumbnail.source,'autor'));
+          setSyn(d.extract);
+          gotBio=true;
+        }
+      }
+    }catch(e){}
+    // EN + translate
+    if(!gotBio){
+      const r=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${wq}`);
+      if(r.ok){
+        const d=await r.json();
+        if(!d.type?.includes('disambig')&&d.extract&&d.extract.length>50){
+          if(d.thumbnail?.source)setCover(coverImg(d.thumbnail.source,'autor'));
+          const t=await translate(d.extract.slice(0,800));
+          setSyn(t);
+          gotBio=true;
         }
       }
     }
-  }catch(e){document.getElementById('wm-syn').textContent='Biografía no disponible.';}
+    if(!gotBio)setSyn('Biografía no disponible. Consulta los enlaces externos para más información.');
+  }catch(e){setSyn('Biografía no disponible.');}
 }
 
 // ══ MODES ════════════════════════════════
@@ -947,7 +1092,25 @@ function buildFBar(type){
   const items=type==='cat'
     ?[['null','todo',{color:'#7b5fff'}],...Object.entries(CATS).map(([k,v])=>[k,v.label,v])]
     :[['null','todo',{color:'#7b5fff'}],...Object.entries(SENSATIONS||{}).map(([k,v])=>[k,`${v.emoji} ${v.label}`,v])];
-  bar.innerHTML=items.map(([k,label,{color}])=>`<span class="fchip${(!aFilter&&k==='null')||aFilter===k?' on':''}" id="fc-${k}" style="--cc:${color}" onclick="setFilter('${k}','${type}')"><span class="dot" style="background:${color}"></span>${label}</span>`).join('');
+  const catChips=items.map(([k,label,{color}])=>`<span class="fchip${(!aFilter&&k==='null')||aFilter===k?' on':''}" id="fc-${k}" style="--cc:${color}" onclick="setFilter('${k}','${type}')"><span class="dot" style="background:${color}"></span>${label}</span>`).join('');
+  // Work type filter chips — always shown
+  const typeChips=[
+    ['null','todo',{color:'rgba(255,255,255,.3)'}],
+    ['libro','📖 Libros',{color:'#00e5c0'}],
+    ['pelicula','🎬 Películas',{color:'#a29bfe'}],
+    ['serie','📺 Series',{color:'#f5c518'}],
+    ['comic','📓 Cómics',{color:'#ff5c7a'}],
+    ['videojuego','🎮 Videojuegos',{color:'#64c864'}],
+  ].map(([k,label,{color}])=>`<span class="fchip${(!wTypeFilter&&k==='null')||wTypeFilter===k?' on':''}" id="wt-${k}" style="--cc:${color}" onclick="setWorkType('${k}')">${label}</span>`).join('');
+  bar.innerHTML=`<div style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;width:100%;padding-bottom:4px">${catChips}</div><div style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;width:100%;border-top:1px solid rgba(255,255,255,.06);padding-top:4px">${typeChips}</div>`;
+  bar.style.flexDirection='column';bar.style.gap='0';
+}
+
+function setWorkType(key){
+  wTypeFilter=key==='null'?null:key;
+  document.querySelectorAll('[id^="wt-"]').forEach(e=>e.classList.remove('on'));
+  document.getElementById('wt-'+key)?.classList.add('on');
+  applyFilter();
 }
 
 function setFilter(key,type){
@@ -958,6 +1121,7 @@ function setFilter(key,type){
   document.querySelectorAll('.fchip').forEach(e=>e.classList.remove('on'));
   document.getElementById('fc-'+key)?.classList.add('on');
   applyFilter();
+  updateLegend();
 }
 
 function buildCaminos(){
@@ -977,26 +1141,110 @@ function startPath(pid){
   showPathDetail(pid);
 }
 
+let pathWorkType=null;
+
 function showPathDetail(pid){
+  pathWorkType=wTypeFilter; // inherit global filter
+  renderPathDetail(pid,pathWorkType);
+}
+
+function renderPathDetail(pid,wt){
   const p=(PATHS||[]).find(x=>x.id===pid);if(!p)return;
+
+  // Collect all works from path nodes
+  const allWorks=[];
+  p.nodes.filter(id=>NODES[id]).forEach(id=>{
+    (NODES[id]?.works||[]).forEach(w=>{
+      if(!allWorks.find(x=>x.title===w.title))
+        allWorks.push({...w,nodeId:id,nodeLabel:NODES[id].label,nodeColor:nCol[id]||'#fff'});
+    });
+  });
+  const filteredWorks=wt?allWorks.filter(w=>w.type===wt):allWorks;
+
+  const typeFilters=[
+    {k:null,label:'Todos',n:allWorks.length},
+    {k:'libro',label:'📖',n:allWorks.filter(w=>w.type==='libro').length},
+    {k:'pelicula',label:'🎬',n:allWorks.filter(w=>w.type==='pelicula').length},
+    {k:'serie',label:'📺',n:allWorks.filter(w=>w.type==='serie').length},
+    {k:'comic',label:'📓',n:allWorks.filter(w=>w.type==='comic').length},
+    {k:'videojuego',label:'🎮',n:allWorks.filter(w=>w.type==='videojuego').length},
+  ].filter(x=>x.k===null||x.n>0);
+
   document.getElementById('fp-caminos').innerHTML=`
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
       <button onclick="buildCaminos()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:0">←</button>
       <div style="font-size:14px;font-weight:700;color:${p.color}">${p.emoji} ${p.title}</div>
     </div>
-    <div style="font-size:12px;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:16px">${p.desc}</div>
-    <div style="font-size:10px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px">Nodos del camino · ${p.nodes.length}</div>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      ${p.nodes.filter(id=>NODES[id]).map((id,i)=>`
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.04);border-radius:12px;border:1px solid ${nCol[id]}33;cursor:pointer" onclick="openNode('${id}')">
-          <div style="width:24px;height:24px;border-radius:50%;background:${nCol[id]};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#000;flex-shrink:0">${i+1}</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:600;color:${nCol[id]}">${NODES[id].label}</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${NODES[id].desc?.split('.')[0]||''}</div>
-          </div>
-          <div style="font-size:10px;color:var(--muted)">→</div>
-        </div>`).join('')}
+    <div style="font-size:12px;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:14px">${p.desc}</div>
+
+    <!-- Type filter -->
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px">
+      ${typeFilters.map(f=>`<span style="padding:3px 10px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid rgba(255,255,255,${wt===f.k?.3:.1});background:rgba(255,255,255,${wt===f.k?.08:.03});color:${wt===f.k?'#fff':'rgba(255,255,255,.5)'}" onclick="renderPathDetail('${pid}',${f.k?`'${f.k}'`:'null'})">${f.label} ${f.n}</span>`).join('')}
+    </div>
+
+    <!-- Tabs: nodos / obras -->
+    <div style="display:flex;gap:0;margin-bottom:12px;border-bottom:1px solid var(--border)">
+      <button id="ptab-nodos" onclick="showPathTab('${pid}','nodos',${wt?`'${wt}'`:'null'})" style="flex:1;padding:7px;background:none;border:none;border-bottom:2px solid var(--accent);color:var(--text);font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer">CONCEPTOS · ${p.nodes.length}</button>
+      <button id="ptab-obras" onclick="showPathTab('${pid}','obras',${wt?`'${wt}'`:'null'})" style="flex:1;padding:7px;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-family:var(--font);font-size:11px;cursor:pointer">OBRAS · ${filteredWorks.length}</button>
+    </div>
+
+    <div id="path-tab-content">
+      ${renderPathNodos(p)}
     </div>`;
+}
+
+function renderPathNodos(p){
+  return `<div style="display:flex;flex-direction:column;gap:8px">
+    ${p.nodes.filter(id=>NODES[id]).map((id,i)=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.04);border-radius:12px;border:1px solid ${nCol[id]}33;cursor:pointer" onclick="openNode('${id}')">
+        <div style="width:24px;height:24px;border-radius:50%;background:${nCol[id]};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#000;flex-shrink:0">${i+1}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:${nCol[id]}">${NODES[id].label}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical">${NODES[id].desc?.split('.')[0]||''}</div>
+        </div>
+        <div style="font-size:10px;color:var(--muted)">→</div>
+      </div>`).join('')}
+  </div>`;
+}
+
+function renderPathObras(pid,wt){
+  const p=(PATHS||[]).find(x=>x.id===pid);if(!p)return '';
+  const allWorks=[];
+  p.nodes.filter(id=>NODES[id]).forEach(id=>{
+    (NODES[id]?.works||[]).forEach(w=>{
+      if(!allWorks.find(x=>x.title===w.title))
+        allWorks.push({...w,nodeLabel:NODES[id].label,nodeColor:nCol[id]||'#fff'});
+    });
+  });
+  const works=wt?allWorks.filter(w=>w.type===wt):allWorks;
+  if(!works.length)return `<div style="text-align:center;padding:2rem;color:var(--muted)">Sin obras de este tipo en este camino.</div>`;
+  return `<div style="display:flex;flex-direction:column;gap:6px">
+    ${works.map(w=>`
+      <div class="wcard" onclick="openWork('${w.title.replace(/'/g,"\\'").replace(/"/g,"&quot;")}','${w.type}','${(w.author||"").replace(/'/g,"\\'")}',null)">
+        <span class="wbadge ${TB[w.type]||'bl'}">${TL[w.type]||w.type}</span>
+        <div class="winfo">
+          <div class="wt">${w.title}</div>
+          <div style="font-size:10px;color:var(--muted)">${w.author||''} <span style="color:${w.nodeColor};margin-left:4px">· ${w.nodeLabel}</span></div>
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
+
+function showPathTab(pid,tab,wt){
+  const content=document.getElementById('path-tab-content');
+  if(!content)return;
+  const nBtn=document.getElementById('ptab-nodos');
+  const oBtn=document.getElementById('ptab-obras');
+  if(tab==='nodos'){
+    if(nBtn){nBtn.style.borderBottomColor='var(--accent)';nBtn.style.color='var(--text)';}
+    if(oBtn){oBtn.style.borderBottomColor='transparent';oBtn.style.color='var(--muted)';}
+    const p=(PATHS||[]).find(x=>x.id===pid);
+    if(p)content.innerHTML=renderPathNodos(p);
+  } else {
+    if(oBtn){oBtn.style.borderBottomColor='var(--accent)';oBtn.style.color='var(--text)';}
+    if(nBtn){nBtn.style.borderBottomColor='transparent';nBtn.style.color='var(--muted)';}
+    content.innerHTML=renderPathObras(pid,wt==='null'?null:wt);
+  }
 }
 
 function buildTimeline(){
@@ -1190,6 +1438,9 @@ let journeyIndex=0;
 
 function setMapMode(mode){
   mapMode=mode;
+  // Update mode buttons
+  document.querySelectorAll('.mmbtn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('mm-'+mode)?.classList.add('active');
   if(mode==='galaxy') activateGalaxy();
   else if(mode==='journey') activateJourney();
   else deactivateSpecialModes();
@@ -1200,53 +1451,71 @@ function activateGalaxy(){
   mapMode='galaxy';
   // Reorganize nodes into category clusters
   const catKeys=Object.keys(CATS);
-  const clusterRadius=500;
-  const nodeRadius=120;
+  const clusterRadius=480;
   catKeys.forEach((cat,ci)=>{
     const angle=(ci/catKeys.length)*Math.PI*2;
     const cx=Math.cos(angle)*clusterRadius;
-    const cy=Math.sin(angle)*clusterRadius*.6;
-    const cz=Math.sin(angle*2)*clusterRadius*.4;
+    const cy=Math.sin(angle)*clusterRadius*.55;
+    const cz=Math.sin(angle*1.7)*clusterRadius*.45;
     const catIds=CATS[cat].ids.filter(id=>meshes[id]);
     catIds.forEach((id,ni)=>{
-      const na=(ni/catIds.length)*Math.PI*2;
-      const nr=nodeRadius*(ni%3==0?.3:.6+Math.random()*.4);
-      pos3d[id]={x:cx+Math.cos(na)*nr,y:cy+Math.sin(na)*nr*.7,z:cz+Math.cos(na*1.3)*nr*.5};
+      const na=(ni/Math.max(catIds.length,1))*Math.PI*2;
+      const nr=80+Math.random()*60;
+      pos3d[id]={x:cx+Math.cos(na)*nr,y:cy+Math.sin(na)*nr*.8,z:cz+Math.sin(na*1.3)*nr*.6};
       const mesh=meshes[id];
-      if(mesh)mesh.position.set(pos3d[id].x,pos3d[id].y,pos3d[id].z);
+      if(mesh){
+        // Animate to new position
+        mesh.position.set(pos3d[id].x,pos3d[id].y,pos3d[id].z);
+      }
       const lbl=labels[id];
-      if(lbl)lbl.style.transition='all .8s';
+      if(lbl){lbl.style.transition='left .8s, top .8s';}
     });
   });
-  // Update edge positions
   updateEdgePositions();
-  // Show toast
-  showToast('🌌 Vista Galaxia — conceptos agrupados por categoría');
-  tR=1400;autoRot=true;
+  // Show category name labels
+  showToast('🌌 Vista Galaxia — cada constelación es una categoría');
+  tR=1600;autoRot=true;
+  document.querySelector('#mm-galaxy')?.classList.add('active');
 }
 
 function activateJourney(){
   deactivateSpecialModes();
   mapMode='journey';
-  showToast('🚀 Modo Viaje — navegando el universo automáticamente');
   autoRot=false;
-  // Visit nodes automatically in a loop
-  const journeyPath=nids.slice().sort(()=>Math.random()-.5);
+  // Add journey indicator
+  const existing=document.getElementById('journey-indicator');
+  if(!existing){
+    const ind=document.createElement('div');
+    ind.id='journey-indicator';
+    ind.style.cssText='position:fixed;bottom:58px;left:50%;transform:translateX(-50%);z-index:25;background:rgba(123,95,255,.2);border:1px solid rgba(123,95,255,.4);border-radius:20px;padding:5px 14px;font-size:11px;color:#a29bfe;letter-spacing:1px;pointer-events:none';
+    ind.textContent='🚀 MODO VIAJE — toca para detener';
+    ind.onclick=()=>{setMapMode('normal');ind.remove();};
+    ind.style.pointerEvents='auto';
+    document.body.appendChild(ind);
+  }
+
+  const journeyPath=[...nids].sort(()=>Math.random()-.5);
   journeyIndex=0;
   function nextNode(){
-    if(mapMode!=='journey')return;
+    if(mapMode!=='journey'){
+      const ind=document.getElementById('journey-indicator');
+      if(ind)ind.remove();
+      return;
+    }
     const id=journeyPath[journeyIndex%journeyPath.length];
     journeyIndex++;
     hlNode(id);
-    // Fly to node
     const p=pos3d[id];
     if(p){
       const len=Math.sqrt(p.x*p.x+p.y*p.y+p.z*p.z)||1;
       tPhi=Math.acos(Math.max(-1,Math.min(1,p.y/len)));
       tTheta=Math.atan2(p.x,p.z);
-      tR=500;
+      tR=480;
     }
-    journeyInterval=setTimeout(nextNode,3500);
+    // Update indicator
+    const ind=document.getElementById('journey-indicator');
+    if(ind&&NODES[id])ind.textContent=`🚀 ${NODES[id].label} — toca para detener`;
+    journeyInterval=setTimeout(nextNode,3800);
   }
   nextNode();
 }
@@ -1288,6 +1557,10 @@ function startApp(){
   document.getElementById('sw').textContent=TW;
   document.getElementById('sc').textContent=TC;
   buildFBar('cat');
+  buildLegend();
+  // Show legend and map mode buttons
+  document.getElementById('legend').style.display='block';
+  document.getElementById('map-mode-btns').style.display='flex';
   // Force resize after intro hides — critical for correct canvas dimensions
   requestAnimationFrame(()=>{
     resizeR();
