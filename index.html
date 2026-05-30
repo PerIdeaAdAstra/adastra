@@ -13,7 +13,8 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{--bg:#04040f;--s1:rgba(255,255,255,.05);--border:rgba(255,255,255,.09);--text:#e8e6f0;--muted:rgba(255,255,255,.4);--accent:#7b5fff;--accent2:#00e5c0;--gold:#f5c518;--font:'Helvetica Neue',Arial,sans-serif}
 html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font)}
-#three-wrap{position:fixed;inset:0;z-index:0;transition:right .32s cubic-bezier(.4,0,.2,1)}
+#label-overlay{position:fixed;inset:0;pointer-events:none;z-index:5;overflow:hidden}
+.nlabel{position:absolute;transform:translate(-50%,-100%);font-size:11px;font-weight:600;color:#fff;text-shadow:0 0 8px rgba(0,0,0,1),0 0 4px rgba(0,0,0,1);white-space:nowrap;pointer-events:none;transition:opacity .2s}
 
 /* INTRO */
 .intro{position:fixed;inset:0;z-index:50;overflow:hidden;cursor:pointer}
@@ -169,6 +170,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 
 <!-- 3D -->
 <div id="three-wrap"></div>
+<div id="label-overlay"></div>
 
 <!-- HEADER -->
 <div class="hdr" id="hdr" style="display:none">
@@ -433,9 +435,11 @@ function loop3d(){
   requestAnimationFrame(loop3d);
   // Orbit
   if(autoRot&&!selId)tTheta+=.0035;
-  oTheta+=(tTheta-oTheta)*.08;
-  oPhi+=(tPhi-oPhi)*.08;
-  oR+=(tR-oR)*.08;
+  // No inertia — snap immediately when dragging, smooth only for auto-rotate
+  const drag=pDown;
+  oTheta+=drag?(tTheta-oTheta):(tTheta-oTheta)*.06;
+  oPhi+=drag?(tPhi-oPhi):(tPhi-oPhi)*.06;
+  oR+=(tR-oR)*.1;
   oPhi=Math.max(.05,Math.min(Math.PI-.05,oPhi));
   camera.position.set(oR*Math.sin(oPhi)*Math.sin(oTheta),oR*Math.cos(oPhi),oR*Math.sin(oPhi)*Math.cos(oTheta));
   camera.lookAt(0,0,0);
@@ -509,19 +513,18 @@ function makeMesh(id){
   mesh.position.set(p.x,p.y,p.z);mesh.userData.id=id;
   scene.add(mesh);meshes[id]=mesh;
 
-  // Label sprite
-  const cv=document.createElement('canvas');const cx=cv.getContext('2d');
-  const fs=22;cx.font=`600 ${fs}px Helvetica Neue,Arial,sans-serif`;
-  const tw=cx.measureText(NODES[id]?.label||id).width;
-  cv.width=Math.ceil(tw)+20;cv.height=fs+10;
-  cx.font=`600 ${fs}px Helvetica Neue,Arial,sans-serif`;
-  cx.shadowColor='rgba(0,0,0,.95)';cx.shadowBlur=8;
-  cx.fillStyle=col;cx.fillText(NODES[id]?.label||id,10,fs);
-  const tex=new T.CanvasTexture(cv);
-  const sp=new T.Sprite(new T.SpriteMaterial({map:tex,transparent:true,depthTest:false,opacity:0}));
-  sp.scale.set(cv.width/30,1,1);
-  sp.position.set(p.x,p.y+sz+10,p.z);
-  scene.add(sp);labels[id]=sp;
+  // HTML overlay labels instead of 3D sprites
+  const overlay=document.getElementById('label-overlay');
+  nids.forEach(id=>{
+    const div=document.createElement('div');
+    div.className='nlabel';
+    div.id='lbl-'+id;
+    div.textContent=NODES[id]?.label||id;
+    div.style.color=nCol[id]||'#fff';
+    div.style.opacity='0';
+    overlay.appendChild(div);
+    labels[id]=div;
+  });
 }
 
 function addSecretMesh(id){
@@ -530,11 +533,36 @@ function addSecretMesh(id){
 }
 
 function updateLabels(){
-  Object.entries(labels).forEach(([id,sp])=>{
+  const T=window.THREE;if(!T||!camera||!renderer)return;
+  const W=renderer.domElement.width/window.devicePixelRatio;
+  const H=renderer.domElement.height/window.devicePixelRatio;
+  const panelOpen=document.getElementById('spanel').classList.contains('open');
+  const pw=panelOpen&&window.innerWidth>680?Math.min(420,Math.round(window.innerWidth*.42)):0;
+
+  nids.forEach(id=>{
+    const lbl=labels[id];if(!lbl)return;
+    const p=pos3d[id];if(!p)return;
+    const mesh=meshes[id];
     const isSel=selId===id;
     const isConn=selId&&(NODES[selId]?.connections||[]).includes(id);
-    const close=oR<550;
-    sp.material.opacity=isSel?1:isConn?.85:close?.45:0;
+    const show=isSel||isConn||(oR<600);
+    if(!show){lbl.style.opacity='0';return;}
+
+    // Project to screen
+    const vec=new T.Vector3(p.x,p.y,p.z);
+    vec.project(camera);
+    const sx=(vec.x*.5+.5)*W;
+    const sy=(-.5*vec.y+.5)*H;
+    // Hide if behind camera
+    if(vec.z>1){lbl.style.opacity='0';return;}
+    // Hide if outside visible area
+    if(sx<0||sx>W-pw||sy<0||sy>H){lbl.style.opacity='0';return;}
+
+    lbl.style.left=sx+'px';
+    lbl.style.top=(sy-8)+'px';
+    lbl.style.opacity=isSel?'1':isConn?'.9':'.55';
+    lbl.style.fontSize=isSel?'13px':'10px';
+    lbl.style.fontWeight=isSel?'700':'500';
   });
 }
 
@@ -546,7 +574,7 @@ function bindEvents(){
     if(pDown){
       const dx=e.clientX-pX,dy=e.clientY-pY;
       if(Math.abs(e.clientX-pdX)>4||Math.abs(e.clientY-pdY)>4)pMoved=true;
-      tTheta-=dx*.005;tPhi=Math.max(.05,Math.min(Math.PI-.05,tPhi+dy*.005));
+      tTheta+=dx*.005;tPhi=Math.max(.05,Math.min(Math.PI-.05,tPhi-dy*.005));
       pX=e.clientX;pY=e.clientY;
     } else doHover(e.clientX,e.clientY);
   });
@@ -561,7 +589,7 @@ function bindEvents(){
     if(e.touches.length===1&&pDown){
       const dx=e.touches[0].clientX-pX,dy=e.touches[0].clientY-pY;
       if(Math.abs(dx)>4||Math.abs(dy)>4)pMoved=true;
-      tTheta-=dx*.005;tPhi=Math.max(.05,Math.min(Math.PI-.05,tPhi+dy*.005));
+      tTheta+=dx*.005;tPhi=Math.max(.05,Math.min(Math.PI-.05,tPhi-dy*.005));
       pX=e.touches[0].clientX;pY=e.touches[0].clientY;
     } else if(e.touches.length===2){
       tR=Math.max(180,Math.min(2400,pinchR*(pinchD/tdist(e))));
@@ -764,26 +792,44 @@ async function openWork(title,type,author,fromNode){
         }
       }
     } else {
-      // Wikipedia ES
+      // Books: try Open Library first (best for book covers)
+      let covered=false;
+      try{
+        // Search Open Library by title
+        const olQ=encodeURIComponent(title);
+        const olR=await fetch(`https://openlibrary.org/search.json?q=${olQ}&limit=1&fields=cover_i,key`);
+        if(olR.ok){
+          const olD=await olR.json();
+          const coverId=olD.docs?.[0]?.cover_i;
+          if(coverId){
+            document.getElementById('wm-cover').innerHTML=`<img class="wmcover" src="https://covers.openlibrary.org/b/id/${coverId}-L.jpg" onerror="this.parentNode.innerHTML='<div class=\\'wmph\\'>${TE[type]||'📖'}</div>'">`;
+            covered=true;
+          }
+        }
+      }catch(e){}
+
+      // Wikipedia for synopsis
       const wq=encodeURIComponent(title.replace(/ /g,'_'));
-      const r=await fetch(`https://es.wikipedia.org/api/rest_v1/page/summary/${wq}`);
-      if(r.ok){
-        const d=await r.json();
-        if(d.thumbnail?.source)document.getElementById('wm-cover').innerHTML=`<img class="wmcover" src="${d.thumbnail.source}" style="object-fit:cover;object-position:top" onerror="this.parentNode.innerHTML='<div class=\\'wmph\\'>${TE[type]||'📖'}</div>'">`;
-        if(d.extract)document.getElementById('wm-syn').textContent=d.extract;
-        else await tryEnWiki(title,type);
-      } else await tryEnWiki(title,type);
+      try{
+        const r=await fetch(`https://es.wikipedia.org/api/rest_v1/page/summary/${wq}`);
+        if(r.ok){
+          const d=await r.json();
+          if(!covered&&d.thumbnail?.source)document.getElementById('wm-cover').innerHTML=`<img class="wmcover" src="${d.thumbnail.source}" style="object-fit:cover;object-position:top" onerror="this.parentNode.innerHTML='<div class=\\'wmph\\'>${TE[type]||'📖'}</div>'">`;
+          if(d.extract)document.getElementById('wm-syn').textContent=d.extract;
+          else await tryEnWiki(title,type,covered);
+        } else await tryEnWiki(title,type,covered);
+      }catch(e){await tryEnWiki(title,type,covered);}
     }
   }catch(e){document.getElementById('wm-syn').textContent='No se pudo cargar la sinopsis.';}
 }
 
-async function tryEnWiki(title,type){
+async function tryEnWiki(title,type,covered=false){
   try{
     const wq=encodeURIComponent(title.replace(/ /g,'_'));
     const r=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${wq}`);
     if(!r.ok){document.getElementById('wm-syn').textContent='Sinopsis no disponible.';return;}
     const d=await r.json();
-    if(d.thumbnail?.source)document.getElementById('wm-cover').innerHTML=`<img class="wmcover" src="${d.thumbnail.source}" style="object-fit:cover;object-position:top" onerror="this.parentNode.innerHTML='<div class=\\'wmph\\'>${TE[type]||'📖'}</div>'">`;
+    if(!covered&&d.thumbnail?.source)document.getElementById('wm-cover').innerHTML=`<img class="wmcover" src="${d.thumbnail.source}" style="object-fit:cover;object-position:top" onerror="this.parentNode.innerHTML='<div class=\\'wmph\\'>${TE[type]||'📖'}</div>'">`;
     if(d.extract){
       // Translate
       const tr=await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(d.extract.slice(0,500))}&langpair=en|es`);
@@ -829,7 +875,7 @@ async function openAuthor(author){
     const r=await fetch(`https://es.wikipedia.org/api/rest_v1/page/summary/${wq}`);
     if(r.ok){
       const d=await r.json();
-      if(d.thumbnail?.source)document.getElementById('wm-cover').innerHTML=`<img class="wmcover" src="${d.thumbnail.source}" style="object-fit:cover;object-position:top 20%">`;
+      if(!covered&&d.thumbnail?.source)document.getElementById('wm-cover').innerHTML=`<img class="wmcover" src="${d.thumbnail.source}" style="object-fit:cover;object-position:top 20%">`;
       if(d.extract)document.getElementById('wm-syn').textContent=d.extract;
     } else {
       const re=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${wq}`);
