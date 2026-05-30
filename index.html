@@ -194,11 +194,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
     <div class="sresults" id="sresults" style="display:none"></div>
   </div>
   <button class="ibtn" onclick="resetView()" title="resetear">⟳</button>
-  <div style="display:flex;gap:3px;flex-shrink:0" id="map-mode-btns">
-    <button class="ibtn mmbtn active" id="mm-normal" onclick="setMapMode('normal')" title="Vista normal — grafo libre">🌐</button>
-    <button class="ibtn mmbtn" id="mm-galaxy" onclick="setMapMode('galaxy')" title="Vista galaxia — conceptos agrupados por categoría">🌌</button>
-    <button class="ibtn mmbtn" id="mm-journey" onclick="setMapMode('journey')" title="Modo viaje — exploración automática">🚀</button>
-  </div>
+
 </div>
 
 <!-- MODE BAR -->
@@ -405,7 +401,7 @@ let pDown=false,pMoved=false,pX=0,pY=0,pdX=0,pdY=0;
 let pinchD=0,pinchR=950;
 let oTheta=0,oPhi=Math.PI/2,oR=950;
 let tTheta=0,tPhi=Math.PI/2,tR=950;
-let autoRot=true,animOn=false;
+let autoRot=false,animOn=false;
 
 function initThree(){
   const T=window.THREE;window.T3=T;
@@ -780,7 +776,7 @@ async function translate(text){
   try{
     // Split into chunks of 500 chars
     const chunks=[];
-    for(let i=0;i<text.length;i+=480)chunks.push(text.slice(i,i+480));
+    for(let i=0;i<Math.min(text.length,1600);i+=480)chunks.push(text.slice(i,i+480));
     const translated=await Promise.all(chunks.map(async chunk=>{
       const r=await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(chunk)}&langpair=en|es`);
       const d=await r.json();
@@ -792,7 +788,7 @@ async function translate(text){
 
 function setCover(html){document.getElementById('wm-cover').innerHTML=html;}
 function setSyn(text){document.getElementById('wm-syn').textContent=text;}
-function coverImg(src,type){return `<img class="wmcover" style="object-fit:contain;background:#111" src="${src}" onerror="this.parentNode.innerHTML='<div class=\"wmph\">${TE[type]||'📖'}</div>'">`;}
+function coverImg(src,type){const ph=TE[type]||'📖';return `<img class="wmcover" style="object-fit:contain;background:#111" src="${src}" onerror="this.parentNode.innerHTML='<div class=\'wmph\'>'+'${ph}'+'</div>'">`;
 
 // ══ OPEN WORK ════════════════════════════
 async function openWork(title,type,author,fromNode){
@@ -912,8 +908,8 @@ async function fetchBookWork(title,type,author){
 
   // 2. Google Books — synopsis
   try{
-    const q=author?`intitle:${encodeURIComponent(title)}+inauthor:${encodeURIComponent(author.split(' ').pop())}`:`intitle:${encodeURIComponent(title)}`;
-    const r=await fetch(`https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=1&fields=items/volumeInfo(description,imageLinks)`);
+    const q=author?`intitle:${encodeURIComponent(title)}+inauthor:${encodeURIComponent(author.split(' ').pop())}`:`intitle:${encodeURIComponent(title)}`;const gbFields='items/volumeInfo(description,imageLinks,categories,publishedDate)';
+    const r=await fetch(`https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=1&fields=${gbFields||'items/volumeInfo(description,imageLinks)'}`);
     if(r.ok){
       const d=await r.json();
       const info=d.items?.[0]?.volumeInfo;
@@ -922,7 +918,7 @@ async function fetchBookWork(title,type,author){
         covered=true;
       }
       if(info?.description&&info.description.length>30){
-        const t=await translate(info.description.slice(0,600));
+        const t=await translate(info.description.slice(0,1200));
         setSyn(t);return;
       }
     }
@@ -958,7 +954,7 @@ async function fetchWikiWork(title,type,covered){
       const d=await r.json();
       if(!d.type?.includes('disambig')&&d.extract&&d.extract.length>50){
         if(!covered&&d.thumbnail?.source)setCover(coverImg(d.thumbnail.source,type));
-        const t=await translate(d.extract.slice(0,600));
+        const t=await translate(d.extract.slice(0,1000));
         setSyn(t);return;
       }
     }
@@ -1032,7 +1028,7 @@ async function openAuthor(author){
         const d=await r.json();
         if(!d.type?.includes('disambig')&&d.extract&&d.extract.length>50){
           if(d.thumbnail?.source)setCover(coverImg(d.thumbnail.source,'autor'));
-          const t=await translate(d.extract.slice(0,800));
+          const t=await translate(d.extract.slice(0,1000));
           setSyn(t);
           gotBio=true;
         }
@@ -1044,6 +1040,8 @@ async function openAuthor(author){
 
 // ══ MODES ════════════════════════════════
 function setMode(mode){
+  // Close work modal if open
+  document.getElementById('wmodal').style.display='none';
   document.querySelectorAll('.mbtn').forEach(b=>b.classList.remove('active'));
   document.getElementById('m-'+mode)?.classList.add('active');
   document.querySelectorAll('.fpanel').forEach(p=>{p.style.display='none';p.style.cssText='';});
@@ -1092,7 +1090,7 @@ function buildFBar(type){
   const items=type==='cat'
     ?[['null','todo',{color:'#7b5fff'}],...Object.entries(CATS).map(([k,v])=>[k,v.label,v])]
     :[['null','todo',{color:'#7b5fff'}],...Object.entries(SENSATIONS||{}).map(([k,v])=>[k,`${v.emoji} ${v.label}`,v])];
-  const catChips=items.map(([k,label,{color}])=>`<span class="fchip${(!aFilter&&k==='null')||aFilter===k?' on':''}" id="fc-${k}" style="--cc:${color}" onclick="setFilter('${k}','${type}')"><span class="dot" style="background:${color}"></span>${label}</span>`).join('');
+  const catChips=type==='cat'?'':items.map(([k,label,{color}])=>`<span class="fchip${(!aFilter&&k==='null')||aFilter===k?' on':''}" id="fc-${k}" style="--cc:${color}" onclick="setFilter('${k}','${type}')"><span class="dot" style="background:${color}"></span>${label}</span>`).join('');
   // Work type filter chips — always shown
   const typeChips=[
     ['null','todo',{color:'rgba(255,255,255,.3)'}],
@@ -1102,7 +1100,8 @@ function buildFBar(type){
     ['comic','📓 Cómics',{color:'#ff5c7a'}],
     ['videojuego','🎮 Videojuegos',{color:'#64c864'}],
   ].map(([k,label,{color}])=>`<span class="fchip${(!wTypeFilter&&k==='null')||wTypeFilter===k?' on':''}" id="wt-${k}" style="--cc:${color}" onclick="setWorkType('${k}')">${label}</span>`).join('');
-  bar.innerHTML=`<div style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;width:100%;padding-bottom:4px">${catChips}</div><div style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;width:100%;border-top:1px solid rgba(255,255,255,.06);padding-top:4px">${typeChips}</div>`;
+  bar.innerHTML=(catChips?`<div style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;width:100%;padding-bottom:4px">${catChips}</div>`:'')
+    +`<div style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;width:100%;${catChips?'border-top:1px solid rgba(255,255,255,.06);padding-top:4px':''}">${typeChips}</div>`;
   bar.style.flexDirection='column';bar.style.gap='0';
 }
 
@@ -1439,8 +1438,6 @@ let journeyIndex=0;
 function setMapMode(mode){
   mapMode=mode;
   // Update mode buttons
-  document.querySelectorAll('.mmbtn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('mm-'+mode)?.classList.add('active');
   if(mode==='galaxy') activateGalaxy();
   else if(mode==='journey') activateJourney();
   else deactivateSpecialModes();
@@ -1475,7 +1472,6 @@ function activateGalaxy(){
   // Show category name labels
   showToast('🌌 Vista Galaxia — cada constelación es una categoría');
   tR=1600;autoRot=true;
-  document.querySelector('#mm-galaxy')?.classList.add('active');
 }
 
 function activateJourney(){
@@ -1547,7 +1543,7 @@ function showToast(msg){
 
 // ══ CONTROLS ═════════════════════════════
 function adjZ(d){tR=Math.max(180,Math.min(2400,tR+d));}
-function resetView(){closePanel();aFilter=null;fType=null;tR=950;tTheta=0;tPhi=Math.PI/2;autoRot=true;applyFilter();buildFBar('cat');}
+function resetView(){closePanel();aFilter=null;fType=null;tR=950;tTheta=0;tPhi=Math.PI/2;applyFilter();buildFBar('cat');}
 
 // ══ START ════════════════════════════════
 function startApp(){
@@ -1558,9 +1554,7 @@ function startApp(){
   document.getElementById('sc').textContent=TC;
   buildFBar('cat');
   buildLegend();
-  // Show legend and map mode buttons
   document.getElementById('legend').style.display='block';
-  document.getElementById('map-mode-btns').style.display='flex';
   // Force resize after intro hides — critical for correct canvas dimensions
   requestAnimationFrame(()=>{
     resizeR();
@@ -1721,6 +1715,7 @@ window.addEventListener('load',function(){
       .then(()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
   }
 });
+}
 </script>
 </body>
 </html>
