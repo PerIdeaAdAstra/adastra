@@ -416,7 +416,8 @@ function isNodeVisible(id){
   if(SECRET_NODES[id]&&!visitedNodes.has(id))return false;
   if(!activeFilter)return true;
   if(filterType==='cat')return nodeCatKey[id]===activeFilter;
-  if(filterType==='sensation')return SENSATIONS[activeFilter]?.nodes.includes(id);
+  if(filterType==='sensation')return (SENSATIONS[activeFilter]?.nodes||[]).includes(id);
+  if(filterType==='path'){const path=PATHS.find(p=>p.id===activeFilter);return path?path.nodes.includes(id):true;}
   return true;
 }
 
@@ -654,6 +655,7 @@ function setMode(mode){
     activeFilter=null;filterType=null;
     buildFilterBar('sensation');
     document.getElementById('filter-bar').style.display='flex';
+    canvas.style.pointerEvents='auto';
   } else if(mode==='cronologia'){
     buildTimeline();
     document.getElementById('timeline-panel').style.display='block';
@@ -683,6 +685,8 @@ function setFilter(key,type){
   closePanel();
   document.querySelectorAll('.fchip').forEach(e=>e.classList.remove('active'));
   document.getElementById('fc-'+key)?.classList.add('active');
+  // Make sure canvas is interactive in map/sensation modes
+  if(type==='cat'||type==='sensation') canvas.style.pointerEvents='auto';
 }
 
 // ── PATHS PANEL ──────────────────────────────────────────────
@@ -705,22 +709,12 @@ function startPath(pathId){
   const path=PATHS.find(p=>p.id===pathId);if(!path)return;
   setMode('mapa');
   activeFilter=pathId;filterType='path';
-  // Center on first node
   const firstId=path.nodes.find(id=>nodePositions[id]);
-  if(firstId){camX=nodePositions[firstId].x;camY=nodePositions[firstId].y;scale=.8;}
-  // Open first node
+  if(firstId){camX=nodePositions[firstId].x;camY=nodePositions[firstId].y;scale=.85;}
   setTimeout(()=>openNode(firstId),300);
 }
 
-// Override isNodeVisible for path mode
-const _origVisible=isNodeVisible;
-function isNodeVisible(id){
-  if(filterType==='path'){
-    const path=PATHS.find(p=>p.id===activeFilter);
-    return path?path.nodes.includes(id):true;
-  }
-  return _origVisible(id);
-}
+
 
 // ── TIMELINE ─────────────────────────────────────────────────
 function buildTimeline(){
@@ -794,10 +788,13 @@ function startApp(){
   document.getElementById('stat-nodes').textContent=nodeIds.length;
   document.getElementById('stat-works').textContent=totalWorks;
   document.getElementById('stat-connections').textContent=totalConns;
-  resize();
-  resetView();
-  buildFilterBar('cat');
-  startEntrance();
+  // Force canvas resize now that it's the only visible element
+  setTimeout(()=>{
+    resize();
+    resetView();
+    buildFilterBar('cat');
+    startEntrance();
+  }, 50);
 }
 
 // ── LOOP ─────────────────────────────────────────────────────
@@ -810,9 +807,23 @@ function loop(ts){
 // ── BOOT ─────────────────────────────────────────────────────
 resize();
 window.addEventListener('resize',resize);
-initLayout();
-requestAnimationFrame(loop);
-if('serviceWorker' in navigator)navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+
+// Verify data loaded
+if(typeof NODES === 'undefined' || Object.keys(NODES).length === 0){
+  document.querySelector('.intro-sub').textContent = 'Error cargando datos. Recarga la página.';
+} else {
+  initLayout();
+  requestAnimationFrame(loop);
+}
+
+// Unregister old service workers to fix caching issues
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.getRegistrations().then(regs=>{
+    regs.forEach(r=>r.unregister());
+  }).then(()=>{
+    navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+  });
+}
 </script>
 </body>
 </html>

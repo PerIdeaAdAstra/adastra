@@ -1360,36 +1360,36 @@ const SENSATIONS = {
 // ═══════════════════════════════════════
 const TIMELINE = [
   { decade: "1800s", label: "Siglo XIX", color: "#fdcb6e",
-    nodes: ["viajes-tiempo","ingenieria-genetica","megaestructuras"],
-    note: "Los fundadores del género. Wells, Verne y Shelley definen los primeros grandes conceptos."
+    nodes: ["viajes-tiempo","ingenieria-genetica","megaestructuras","inmortalidad","mutacion","evolucion-dirigida"],
+    note: "Wells, Verne y Shelley definen los primeros grandes conceptos: el viaje en el tiempo, la ingeniería extrema y el monstruo creado por el hombre."
   },
   { decade: "1920s", label: "Años 20-30", color: "#f5c518",
-    nodes: ["inteligencia-artificial","distopias","mundos-artificiales","estados-totalitarios"],
-    note: "La era pulp y los primeros robots. Čapek inventa la palabra 'robot'. Zamyatin imagina el totalitarismo antes de que llegue."
+    nodes: ["inteligencia-artificial","distopias","mundos-artificiales","estados-totalitarios","realidades-simuladas","ciudades-futuro"],
+    note: "Čapek inventa la palabra 'robot'. Zamyatin y Huxley imaginan el totalitarismo antes de que llegue. Lang construye Metrópolis."
   },
   { decade: "1940s", label: "Años 40-50", color: "#e17055",
-    nodes: ["primer-contacto","contacto-extraterrestre","colonizacion-espacial","naves-generacionales","ascensores-espaciales"],
-    note: "La edad dorada. Asimov, Clarke y Heinlein construyen el vocabulario de la CF moderna."
+    nodes: ["primer-contacto","contacto-extraterrestre","colonizacion-espacial","naves-generacionales","ascensores-espaciales","libre-albedrio","clonacion","artefactos-alienígenas"],
+    note: "La edad dorada. Asimov, Clarke y Heinlein construyen el vocabulario de la CF moderna. El espacio como frontera inevitable."
   },
   { decade: "1960s", label: "Años 60-70", color: "#fd79a8",
-    nodes: ["corporaciones-omnipotentes","ecologias-alienígenas","civilizaciones-alienígenas","evolucion-dirigida","libre-albedrio","megaestructuras"],
-    note: "La nueva ola. Dick, Le Guin y Ballard llevan la CF hacia el interior. Dune redefine el género."
+    nodes: ["corporaciones-omnipotentes","ecologias-alienígenas","civilizaciones-alienígenas","evolucion-dirigida","mesias-tecnologicos","religiones-futuro","lenguajes-extraterrestres","gran-silencio","ultimo-hombre","fin-humanidad","arqueologia-cosmica","ruinas-civilizaciones"],
+    note: "La nueva ola. Dick, Le Guin, Ballard y Lem llevan la CF hacia el interior. Dune redefine el género. El primer contacto se vuelve filosófico."
   },
   { decade: "1980s", label: "Años 80", color: "#a29bfe",
-    nodes: ["realidad-virtual","corporaciones-omnipotentes","memoria","identidad","simulacros-copias","vigilancia-absoluta"],
-    note: "El cyberpunk. Gibson inventa el ciberespacio. Dick y Blade Runner definen la estética del futuro oscuro."
+    nodes: ["realidad-virtual","memoria","identidad","simulacros-copias","vigilancia-absoluta","transferencia-mental","recuerdos-implantados","memorias-artificiales","posthumanismo","nostalgia-futuro"],
+    note: "El cyberpunk. Gibson inventa el ciberespacio. Blade Runner define la estética del futuro oscuro. La identidad se vuelve el gran tema."
   },
   { decade: "1990s", label: "Años 90", color: "#00e5c0",
-    nodes: ["singularidad-tecnologica","realidades-simuladas","posthumanismo","conciencias-digitales","universos-paralelos","mentes-colmena"],
-    note: "La singularidad y Matrix. La CF absorbe internet y la teoría del caos. Vinge propone la singularidad."
+    nodes: ["singularidad-tecnologica","realidades-simuladas","posthumanismo","conciencias-digitales","universos-paralelos","mentes-colmena","suenos-compartidos","habitantes-dimensiones","inmortalidad","megaestructuras","esferas-dyson"],
+    note: "La singularidad y Matrix. La CF absorbe internet. Vinge propone la singularidad tecnológica. Los universos paralelos se vuelven narrativa mainstream."
   },
   { decade: "2000s", label: "Años 2000", color: "#64c8ff",
-    nodes: ["transferencia-mental","inmortalidad","bosque-oscuro","gran-silencio","arqueologia-cosmica","ruinas-civilizaciones"],
-    note: "La CF de las consecuencias. Liu Cixin, Reynolds y Banks exploran imperios galácticos y civilizaciones extintas."
+    nodes: ["bosque-oscuro","gran-silencio","arqueologia-cosmica","ruinas-civilizaciones","civilizaciones-olvidadas","herederos-imperios","especies-creadoras","entidades-cosmicas","fin-universo","universos-moribundos","ultima-pregunta","recuerdos-heredados","vidas-anteriores"],
+    note: "La CF de las consecuencias. Liu Cixin, Reynolds y Banks exploran imperios galácticos y el silencio cósmico. La escala se vuelve astronómica."
   },
   { decade: "2010s", label: "Años 2010-hoy", color: "#55efc4",
-    nodes: ["nostalgia-futuro","fin-humanidad","recuerdos-implantados","memorias-artificiales","entidades-cosmicas","lo-incomprensible"],
-    note: "La CF de la ansiedad. Annihilation, Arrival y el resurgir del terror cósmico. El futuro como amenaza más que como promesa."
+    nodes: ["lo-incomprensible","presencias-desconocidas","observadores-invisibles","mundos-abandonados","planetas-cementerio","satelites-muertos","monumentos-extintas","naves-fantasma","oceanos-conscientes","inteligencias-planetarias","cartografias-perdidas","mapas-ninguna-parte","fin-humanidad","nostalgia-futuro"],
+    note: "La CF de la ansiedad. Annihilation, Arrival y el resurgir del terror cósmico. El futuro como amenaza. Lo incomprensible como estética."
   },
 ];
 
@@ -1503,6 +1503,117 @@ const WORK_DNA = {
       {node: "inteligencia-artificial", pct: 85},
       {node: "identidad", pct: 80},
       {node: "realidad-virtual", pct: 75},
+    ]
+  },
+  "Mass Effect": {
+    author: "BioWare", year: 2007, type: "videojuego",
+    dna: [
+      {node: "arqueologia-cosmica", pct: 95},
+      {node: "civilizaciones-alienígenas", pct: 90},
+      {node: "ruinas-civilizaciones", pct: 88},
+      {node: "primer-contacto", pct: 80},
+      {node: "herederos-imperios", pct: 85},
+    ]
+  },
+  "Arrival": {
+    author: "Denis Villeneuve", year: 2016, type: "pelicula",
+    dna: [
+      {node: "lenguajes-extraterrestres", pct: 100},
+      {node: "viajes-tiempo", pct: 85},
+      {node: "primer-contacto", pct: 90},
+      {node: "memoria", pct: 80},
+      {node: "libre-albedrio", pct: 75},
+      {node: "lo-incomprensible", pct: 70},
+    ]
+  },
+  "Dune: Parte Uno": {
+    author: "Denis Villeneuve", year: 2021, type: "pelicula",
+    dna: [
+      {node: "ecologias-alienígenas", pct: 95},
+      {node: "mesias-tecnologicos", pct: 90},
+      {node: "religiones-futuro", pct: 85},
+      {node: "corporaciones-omnipotentes", pct: 75},
+      {node: "recuerdos-heredados", pct: 70},
+    ]
+  },
+  "Stalker": {
+    author: "Andrei Tarkovsky", year: 1979, type: "pelicula",
+    dna: [
+      {node: "mundos-abandonados", pct: 95},
+      {node: "artefactos-alienígenas", pct: 90},
+      {node: "lo-incomprensible", pct: 95},
+      {node: "libre-albedrio", pct: 80},
+      {node: "presencias-desconocidas", pct: 85},
+    ]
+  },
+  "Fundación": {
+    author: "Isaac Asimov", year: 1951, type: "libro",
+    dna: [
+      {node: "civilizaciones-olvidadas", pct: 80},
+      {node: "herederos-imperios", pct: 95},
+      {node: "conocimientos-perdidos", pct: 90},
+      {node: "ultima-biblioteca", pct: 85},
+      {node: "libre-albedrio", pct: 75},
+    ]
+  },
+  "Altered Carbon": {
+    author: "Richard Morgan", year: 2002, type: "libro",
+    dna: [
+      {node: "transferencia-mental", pct: 100},
+      {node: "inmortalidad", pct: 90},
+      {node: "identidad", pct: 88},
+      {node: "corporaciones-omnipotentes", pct: 75},
+      {node: "memorias-artificiales", pct: 70},
+    ]
+  },
+  "Children of Time": {
+    author: "Adrian Tchaikovsky", year: 2015, type: "libro",
+    dna: [
+      {node: "evolucion-dirigida", pct: 100},
+      {node: "especies-creadoras", pct: 90},
+      {node: "civilizaciones-alienígenas", pct: 88},
+      {node: "lenguajes-extraterrestres", pct: 75},
+      {node: "colonizacion-espacial", pct: 70},
+    ]
+  },
+  "Marte Rojo": {
+    author: "Kim Stanley Robinson", year: 1992, type: "libro",
+    dna: [
+      {node: "terraformacion", pct: 100},
+      {node: "colonizacion-espacial", pct: 95},
+      {node: "ecologias-alienígenas", pct: 85},
+      {node: "utopias", pct: 75},
+      {node: "ingenieria-genetica", pct: 65},
+    ]
+  },
+  "Childhood's End": {
+    author: "Arthur C. Clarke", year: 1953, type: "libro",
+    dna: [
+      {node: "dioses-alienígenas", pct: 95},
+      {node: "fin-humanidad", pct: 90},
+      {node: "evolucion-dirigida", pct: 88},
+      {node: "entidades-cosmicas", pct: 85},
+      {node: "contacto-extraterrestre", pct: 80},
+    ]
+  },
+  "1984": {
+    author: "George Orwell", year: 1949, type: "libro",
+    dna: [
+      {node: "vigilancia-absoluta", pct: 100},
+      {node: "estados-totalitarios", pct: 100},
+      {node: "memorias-artificiales", pct: 85},
+      {node: "libre-albedrio", pct: 80},
+      {node: "identidad", pct: 75},
+    ]
+  },
+  "Ex Machina": {
+    author: "Alex Garland", year: 2014, type: "pelicula",
+    dna: [
+      {node: "inteligencia-artificial", pct: 100},
+      {node: "identidad", pct: 90},
+      {node: "libre-albedrio", pct: 88},
+      {node: "simulacros-copias", pct: 80},
+      {node: "singularidad-tecnologica", pct: 70},
     ]
   },
 };
