@@ -73,7 +73,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .clist{display:flex;flex-wrap:wrap;gap:5px}
 .cchip{padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);transition:background .15s}
 .cchip:hover{background:rgba(255,255,255,.1)}
-.cwhy{font-size:9px;color:var(--accent2);cursor:pointer;margin-left:3px;opacity:.8;text-decoration:underline}
+.cwhy{font-size:10px;color:var(--accent2);cursor:pointer;margin-left:3px;opacity:.9;background:rgba(0,229,192,.1);padding:2px 7px;border-radius:10px;border:1px solid rgba(0,229,192,.2);white-space:nowrap}
 .wlist{display:flex;flex-direction:column;gap:6px}
 .wcard{display:flex;align-items:center;gap:9px;padding:8px 10px;background:var(--s1);border-radius:10px;border:1px solid var(--border);cursor:pointer;transition:background .15s}
 .wcard:hover{background:rgba(255,255,255,.08)}
@@ -92,7 +92,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .dfill{height:100%;border-radius:3px}
 
 /* FULL PANELS */
-.fpanel{position:fixed;top:86px;left:0;right:0;bottom:52px;z-index:15;overflow-y:auto;padding:10px 14px;display:none}
+.fpanel{position:fixed;top:86px;left:0;right:0;bottom:52px;z-index:15;overflow-y:auto;padding:10px 14px;display:none;background:rgba(4,4,15,.97);backdrop-filter:blur(8px)}
 .pcard{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer}
 .pcard:hover{background:rgba(255,255,255,.07)}
 .pnodes{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
@@ -171,10 +171,11 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 <!-- 3D -->
 <div id="three-wrap"></div>
 <div id="label-overlay"></div>
+<div id="map-dim" style="position:fixed;inset:0;z-index:14;background:rgba(4,4,15,.7);opacity:0;transition:opacity .3s;pointer-events:none"></div>
 
 <!-- HEADER -->
 <div class="hdr" id="hdr" style="display:none">
-  <div class="logo">Ad <span>Astra</span></div>
+  <div class="logo"><span style="cursor:pointer;color:rgba(255,255,255,.7)" onclick="setMapMode('galaxy')" title="Vista Galaxia">Ad</span> <span style="cursor:pointer" onclick="setMapMode('journey')" title="Modo Viaje">Astra</span></div>
   <div class="sbox">
     <span class="sicon">🔍</span>
     <input class="sinput" id="sinput" placeholder="concepto, obra o autor..." autocomplete="off" oninput="onSearch(this.value)" onfocus="onSearch(this.value)">
@@ -783,7 +784,7 @@ async function openWork(title,type,author,fromNode){
       const d=await r.json();
       const item=d.results?.[0];
       if(item){
-        if(item.poster_path)document.getElementById('wm-cover').innerHTML=`<img class="wmcover" src="https://image.tmdb.org/t/p/w500${item.poster_path}" onerror="this.parentNode.innerHTML='<div class=\\'wmph\\'>${TE[type]}</div>'">`;
+        if(item.poster_path)document.getElementById('wm-cover').innerHTML=`<img class="wmcover" style="object-fit:contain;background:#111" src="https://image.tmdb.org/t/p/w500${item.poster_path}" onerror="this.parentNode.innerHTML='<div class=\\'wmph\\'>${TE[type]}</div>'">`;
         document.getElementById('wm-syn').textContent=item.overview||'Sinopsis no disponible en español.';
         if(item.id){
           // Add TMDB link
@@ -802,19 +803,23 @@ async function openWork(title,type,author,fromNode){
           const olD=await olR.json();
           const coverId=olD.docs?.[0]?.cover_i;
           if(coverId){
-            document.getElementById('wm-cover').innerHTML=`<img class="wmcover" src="https://covers.openlibrary.org/b/id/${coverId}-L.jpg" onerror="this.parentNode.innerHTML='<div class=\\'wmph\\'>${TE[type]||'📖'}</div>'">`;
+            document.getElementById('wm-cover').innerHTML=`<img class="wmcover" style="object-fit:contain;background:#111" src="https://covers.openlibrary.org/b/id/${coverId}-L.jpg" onerror="this.parentNode.innerHTML='<div class=\\'wmph\\'>${TE[type]||'📖'}</div>'">`;
             covered=true;
           }
         }
       }catch(e){}
 
-      // Wikipedia for synopsis
-      const wq=encodeURIComponent(title.replace(/ /g,'_'));
+      // Wikipedia for synopsis — search with author to avoid disambiguation
+      const wikiTitle=author?`${title.replace(/ /g,'_')}_(novela)`:`${title.replace(/ /g,'_')}`;
+      const wq=encodeURIComponent(wikiTitle);
+      const wqBase=encodeURIComponent(title.replace(/ /g,'_'));
       try{
-        const r=await fetch(`https://es.wikipedia.org/api/rest_v1/page/summary/${wq}`);
+        // Try specific page first, fall back to base title
+        let r=await fetch(`https://es.wikipedia.org/api/rest_v1/page/summary/${wq}`);
+        if(!r.ok||r.url.includes('desambiguaci'))r=await fetch(`https://es.wikipedia.org/api/rest_v1/page/summary/${wqBase}`);
         if(r.ok){
           const d=await r.json();
-          if(!covered&&d.thumbnail?.source)document.getElementById('wm-cover').innerHTML=`<img class="wmcover" src="${d.thumbnail.source}" style="object-fit:cover;object-position:top" onerror="this.parentNode.innerHTML='<div class=\\'wmph\\'>${TE[type]||'📖'}</div>'">`;
+          if(!covered&&d.thumbnail?.source)document.getElementById('wm-cover').innerHTML=`<img class="wmcover" style="object-fit:contain;background:#111" src="${d.thumbnail.source}" style="object-fit:cover;object-position:top" onerror="this.parentNode.innerHTML='<div class=\\'wmph\\'>${TE[type]||'📖'}</div>'">`;
           if(d.extract)document.getElementById('wm-syn').textContent=d.extract;
           else await tryEnWiki(title,type,covered);
         } else await tryEnWiki(title,type,covered);
@@ -829,7 +834,7 @@ async function tryEnWiki(title,type,covered=false){
     const r=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${wq}`);
     if(!r.ok){document.getElementById('wm-syn').textContent='Sinopsis no disponible.';return;}
     const d=await r.json();
-    if(!covered&&d.thumbnail?.source)document.getElementById('wm-cover').innerHTML=`<img class="wmcover" src="${d.thumbnail.source}" style="object-fit:cover;object-position:top" onerror="this.parentNode.innerHTML='<div class=\\'wmph\\'>${TE[type]||'📖'}</div>'">`;
+    if(!covered&&d.thumbnail?.source)document.getElementById('wm-cover').innerHTML=`<img class="wmcover" style="object-fit:contain;background:#111" src="${d.thumbnail.source}" style="object-fit:cover;object-position:top" onerror="this.parentNode.innerHTML='<div class=\\'wmph\\'>${TE[type]||'📖'}</div>'">`;
     if(d.extract){
       // Translate
       const tr=await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(d.extract.slice(0,500))}&langpair=en|es`);
@@ -875,13 +880,13 @@ async function openAuthor(author){
     const r=await fetch(`https://es.wikipedia.org/api/rest_v1/page/summary/${wq}`);
     if(r.ok){
       const d=await r.json();
-      if(!covered&&d.thumbnail?.source)document.getElementById('wm-cover').innerHTML=`<img class="wmcover" src="${d.thumbnail.source}" style="object-fit:cover;object-position:top 20%">`;
+      if(!covered&&d.thumbnail?.source)document.getElementById('wm-cover').innerHTML=`<img class="wmcover" style="object-fit:contain;background:#111" src="${d.thumbnail.source}" style="object-fit:cover;object-position:top 20%">`;
       if(d.extract)document.getElementById('wm-syn').textContent=d.extract;
     } else {
       const re=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${wq}`);
       if(re.ok){
         const de=await re.json();
-        if(de.thumbnail?.source)document.getElementById('wm-cover').innerHTML=`<img class="wmcover" src="${de.thumbnail.source}" style="object-fit:cover;object-position:top 20%">`;
+        if(de.thumbnail?.source)document.getElementById('wm-cover').innerHTML=`<img class="wmcover" style="object-fit:contain;background:#111" src="${de.thumbnail.source}" style="object-fit:cover;object-position:top 20%">`;
         if(de.extract){
           const tr=await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(de.extract.slice(0,500))}&langpair=en|es`);
           const td=await tr.json();
@@ -896,16 +901,45 @@ async function openAuthor(author){
 function setMode(mode){
   document.querySelectorAll('.mbtn').forEach(b=>b.classList.remove('active'));
   document.getElementById('m-'+mode)?.classList.add('active');
-  document.querySelectorAll('.fpanel').forEach(p=>p.style.display='none');
+  document.querySelectorAll('.fpanel').forEach(p=>{p.style.display='none';p.style.cssText='';});
   document.getElementById('fbar').style.display='none';
   document.getElementById('three-wrap').style.pointerEvents='auto';
+  const dim=document.getElementById('map-dim');
+  const fullModes=['caminos','cronologia','laboratorio','perfil'];
+  if(dim)dim.style.opacity=fullModes.includes(mode)?'1':'0';
+  if(dim)dim.style.pointerEvents=fullModes.includes(mode)?'auto':'none';
 
-  if(mode==='mapa'){aFilter=null;fType=null;buildFBar('cat');document.getElementById('fbar').style.display='flex';applyFilter();}
-  else if(mode==='caminos'){buildCaminos();document.getElementById('fp-caminos').style.display='block';document.getElementById('three-wrap').style.pointerEvents='none';}
-  else if(mode==='sensaciones'){aFilter=null;fType=null;buildFBar('sens');document.getElementById('fbar').style.display='flex';applyFilter();}
-  else if(mode==='cronologia'){buildTimeline();document.getElementById('fp-cronologia').style.display='block';document.getElementById('three-wrap').style.pointerEvents='none';}
-  else if(mode==='laboratorio'){buildLab();document.getElementById('fp-laboratorio').style.display='block';document.getElementById('three-wrap').style.pointerEvents='none';}
-  else if(mode==='perfil'){buildProfile();document.getElementById('fp-perfil').style.display='block';document.getElementById('three-wrap').style.pointerEvents='none';}
+  if(mode==='mapa'){
+    aFilter=null;fType=null;buildFBar('cat');
+    document.getElementById('fbar').style.display='flex';
+    applyFilter();
+  } else if(mode==='caminos'){
+    buildCaminos();
+    document.getElementById('fp-caminos').style.display='block';
+    document.getElementById('three-wrap').style.pointerEvents='none';
+  } else if(mode==='sensaciones'){
+    aFilter=null;fType=null;
+    buildFBar('sens');
+    document.getElementById('fbar').style.display='flex';
+    applyFilter();
+    const fp=document.getElementById('fp-sensaciones');
+    fp.innerHTML=`<div style="font-size:12px;color:rgba(255,255,255,.4);line-height:1.7;max-width:500px">Pulsa una sensación arriba para filtrar el mapa.</div>`;
+    fp.style.display='block';
+    fp.style.position='fixed';fp.style.top='118px';fp.style.background='none';
+    fp.style.bottom='auto';fp.style.pointerEvents='none';fp.style.zIndex='16';
+  } else if(mode==='cronologia'){
+    buildTimeline();
+    document.getElementById('fp-cronologia').style.display='block';
+    document.getElementById('three-wrap').style.pointerEvents='none';
+  } else if(mode==='laboratorio'){
+    buildLab();
+    document.getElementById('fp-laboratorio').style.display='block';
+    document.getElementById('three-wrap').style.pointerEvents='none';
+  } else if(mode==='perfil'){
+    buildProfile();
+    document.getElementById('fp-perfil').style.display='block';
+    document.getElementById('three-wrap').style.pointerEvents='none';
+  }
 }
 
 function buildFBar(type){
@@ -918,6 +952,8 @@ function buildFBar(type){
 
 function setFilter(key,type){
   aFilter=key==='null'?null:key;fType=aFilter?type:null;
+  // If in sensaciones mode, keep map interactive
+  if(type==='sens'){document.getElementById('three-wrap').style.pointerEvents='auto';}
   closePanel();
   document.querySelectorAll('.fchip').forEach(e=>e.classList.remove('on'));
   document.getElementById('fc-'+key)?.classList.add('on');
@@ -1146,6 +1182,99 @@ function goNode(id){
   setMode('mapa');openNode(id);
 }
 document.addEventListener('click',e=>{if(!e.target.closest('.sbox'))document.getElementById('sresults').style.display='none';});
+
+// ══ MAP MODES ════════════════════════════
+let mapMode='normal'; // normal | galaxy | journey
+let journeyInterval=null;
+let journeyIndex=0;
+
+function setMapMode(mode){
+  mapMode=mode;
+  if(mode==='galaxy') activateGalaxy();
+  else if(mode==='journey') activateJourney();
+  else deactivateSpecialModes();
+}
+
+function activateGalaxy(){
+  deactivateSpecialModes();
+  mapMode='galaxy';
+  // Reorganize nodes into category clusters
+  const catKeys=Object.keys(CATS);
+  const clusterRadius=500;
+  const nodeRadius=120;
+  catKeys.forEach((cat,ci)=>{
+    const angle=(ci/catKeys.length)*Math.PI*2;
+    const cx=Math.cos(angle)*clusterRadius;
+    const cy=Math.sin(angle)*clusterRadius*.6;
+    const cz=Math.sin(angle*2)*clusterRadius*.4;
+    const catIds=CATS[cat].ids.filter(id=>meshes[id]);
+    catIds.forEach((id,ni)=>{
+      const na=(ni/catIds.length)*Math.PI*2;
+      const nr=nodeRadius*(ni%3==0?.3:.6+Math.random()*.4);
+      pos3d[id]={x:cx+Math.cos(na)*nr,y:cy+Math.sin(na)*nr*.7,z:cz+Math.cos(na*1.3)*nr*.5};
+      const mesh=meshes[id];
+      if(mesh)mesh.position.set(pos3d[id].x,pos3d[id].y,pos3d[id].z);
+      const lbl=labels[id];
+      if(lbl)lbl.style.transition='all .8s';
+    });
+  });
+  // Update edge positions
+  updateEdgePositions();
+  // Show toast
+  showToast('🌌 Vista Galaxia — conceptos agrupados por categoría');
+  tR=1400;autoRot=true;
+}
+
+function activateJourney(){
+  deactivateSpecialModes();
+  mapMode='journey';
+  showToast('🚀 Modo Viaje — navegando el universo automáticamente');
+  autoRot=false;
+  // Visit nodes automatically in a loop
+  const journeyPath=nids.slice().sort(()=>Math.random()-.5);
+  journeyIndex=0;
+  function nextNode(){
+    if(mapMode!=='journey')return;
+    const id=journeyPath[journeyIndex%journeyPath.length];
+    journeyIndex++;
+    hlNode(id);
+    // Fly to node
+    const p=pos3d[id];
+    if(p){
+      const len=Math.sqrt(p.x*p.x+p.y*p.y+p.z*p.z)||1;
+      tPhi=Math.acos(Math.max(-1,Math.min(1,p.y/len)));
+      tTheta=Math.atan2(p.x,p.z);
+      tR=500;
+    }
+    journeyInterval=setTimeout(nextNode,3500);
+  }
+  nextNode();
+}
+
+function deactivateSpecialModes(){
+  if(journeyInterval){clearTimeout(journeyInterval);journeyInterval=null;}
+  mapMode='normal';
+  hlNode(null);
+}
+
+function updateEdgePositions(){
+  const T=window.THREE;if(!T)return;
+  Object.entries(edges).forEach(([key,line])=>{
+    const [id1,id2]=key.split('|');
+    const p1=pos3d[id1],p2=pos3d[id2];
+    if(!p1||!p2)return;
+    const pts=[new T.Vector3(p1.x,p1.y,p1.z),new T.Vector3(p2.x,p2.y,p2.z)];
+    line.geometry.setFromPoints(pts);
+    line.geometry.needsUpdate=true;
+  });
+}
+
+function showToast(msg){
+  document.getElementById('toast-text').textContent=msg;
+  const t=document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
 
 // ══ CONTROLS ═════════════════════════════
 function adjZ(d){tR=Math.max(180,Math.min(2400,tR+d));}
