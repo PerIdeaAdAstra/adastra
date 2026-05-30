@@ -371,15 +371,16 @@ let animRunning=false;
 function initThree(){
   const T=THREE_LIB;
   const wrap=document.getElementById('three-wrap');
+  const W=window.innerWidth,H=window.innerHeight;
 
   renderer=new T.WebGLRenderer({antialias:true,alpha:false});
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
   renderer.setClearColor(0x04040f,1);
-  resizeThree();
+  renderer.setSize(W,H);
   wrap.appendChild(renderer.domElement);
 
   scene=new T.Scene();
-  camera=new T.PerspectiveCamera(55,wrap.clientWidth/wrap.clientHeight,.1,5000);
+  camera=new T.PerspectiveCamera(55,W/H,.1,5000);
   camera.position.set(0,0,orbitRadius);
 
   // Lights
@@ -1072,7 +1073,14 @@ function resetView(){closePanel();activeFilter=null;filterType=null;targetRadius
 // ══════════════════════════════════════════
 function startApp(){
   document.getElementById('intro').style.display='none';
-  ['header','mode-bar','filter-bar','zoom-ctrl','stats-bar'].forEach(id=>{document.getElementById(id).style.display=id==='mode-bar'?'flex':id==='stats-bar'?'flex':id==='zoom-ctrl'?'flex':id==='filter-bar'?'flex':'flex';});
+  // Trigger resize now that three-wrap is fully visible
+  setTimeout(()=>{
+    resizeThree();
+    autoRotate=true;
+  },50);
+  ['header','mode-bar','filter-bar','zoom-ctrl','stats-bar'].forEach(id=>{
+    document.getElementById(id).style.display='flex';
+  });
   document.getElementById('stat-nodes').textContent=nodeIds.length;
   document.getElementById('stat-works').textContent=totalWorks;
   document.getElementById('stat-connections').textContent=totalConns;
