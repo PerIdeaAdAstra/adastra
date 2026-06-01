@@ -166,17 +166,17 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 </style>
 </head>
 <body>
-<script src="data.js" defer></script>
+<script src="data.js"></script>
 
 <!-- INTRO -->
-<div class="intro" id="intro" onclick="startApp()">
+<div class="intro" id="intro" onclick="window.appReady?startApp():null">
   <canvas id="intro-canvas"></canvas>
   <div class="intro-text">
     <div class="intro-ad">Ad</div>
     <div class="intro-astra">Astra</div>
     
   </div>
-  <div class="intro-tap">toca para explorar</div>
+  <div class="intro-tap" id="intro-tap">toca para explorar</div>
 </div>
 
 <!-- 3D -->
@@ -1715,6 +1715,10 @@ window.addEventListener('load',function(){
     navigator.serviceWorker.getRegistrations().then(r=>r.forEach(x=>x.unregister()))
       .then(()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
   }
+  window.appReady=true;
+  // Enable intro click
+  const introEl=document.getElementById('intro');
+  if(introEl)introEl.onclick=startApp;
 });
 </script>
 </body>
