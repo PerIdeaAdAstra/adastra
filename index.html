@@ -587,7 +587,7 @@ function buildLegend(){
   const leg=document.getElementById('legend');
   if(!leg)return;
   leg.innerHTML=Object.entries(CATS).map(([k,{color,label}])=>`
-    <div class="leg-item" id="leg-${k}" onclick="setFilter('${k}','cat');setMode('mapa')" style="--lc:${color}">
+    <div class="leg-item" id="leg-${k}" onclick="setFilter('${k}','cat')" style="--lc:${color}">
       <span class="leg-dot" style="background:${color}"></span>${label}
     </div>`).join('');
   leg.style.display='block';
@@ -1044,7 +1044,7 @@ function setMode(mode){
   document.getElementById('wmodal').style.display='none';
   document.querySelectorAll('.mbtn').forEach(b=>b.classList.remove('active'));
   document.getElementById('m-'+mode)?.classList.add('active');
-  document.querySelectorAll('.fpanel').forEach(p=>{p.style.display='none';p.style.cssText='';});
+  document.querySelectorAll('.fpanel').forEach(p=>{p.style.display='none';p.style.cssText='display:none';});
   document.getElementById('fbar').style.display='none';
   document.getElementById('three-wrap').style.pointerEvents='auto';
   const dim=document.getElementById('map-dim');
@@ -1053,7 +1053,7 @@ function setMode(mode){
   if(dim)dim.style.pointerEvents=fullModes.includes(mode)?'auto':'none';
 
   if(mode==='mapa'){
-    aFilter=null;fType=null;buildFBar('cat');
+    buildFBar(fType==='sens'?'sens':'cat');
     document.getElementById('fbar').style.display='flex';
     applyFilter();
   } else if(mode==='caminos'){
@@ -1061,7 +1061,6 @@ function setMode(mode){
     document.getElementById('fp-caminos').style.display='block';
     document.getElementById('three-wrap').style.pointerEvents='none';
   } else if(mode==='sensaciones'){
-    aFilter=null;fType=null;
     buildFBar('sens');
     document.getElementById('fbar').style.display='flex';
     applyFilter();
@@ -1090,7 +1089,7 @@ function buildFBar(type){
   const items=type==='cat'
     ?[['null','todo',{color:'#7b5fff'}],...Object.entries(CATS).map(([k,v])=>[k,v.label,v])]
     :[['null','todo',{color:'#7b5fff'}],...Object.entries(SENSATIONS||{}).map(([k,v])=>[k,`${v.emoji} ${v.label}`,v])];
-  const catChips=type==='cat'?'':items.map(([k,label,{color}])=>`<span class="fchip${(!aFilter&&k==='null')||aFilter===k?' on':''}" id="fc-${k}" style="--cc:${color}" onclick="setFilter('${k}','${type}')"><span class="dot" style="background:${color}"></span>${label}</span>`).join('');
+  const catChips=items.map(([k,label,{color}])=>`<span class="fchip${(!aFilter&&k==='null')||aFilter===k?' on':''}" id="fc-${k}" style="--cc:${color}" onclick="setFilter('${k}','${type}')"><span class="dot" style="background:${color}"></span>${label}</span>`).join('');
   // Work type filter chips — always shown
   const typeChips=[
     ['null','todo',{color:'rgba(255,255,255,.3)'}],
@@ -1543,7 +1542,7 @@ function showToast(msg){
 
 // ══ CONTROLS ═════════════════════════════
 function adjZ(d){tR=Math.max(180,Math.min(2400,tR+d));}
-function resetView(){closePanel();aFilter=null;fType=null;tR=950;tTheta=0;tPhi=Math.PI/2;applyFilter();buildFBar('cat');}
+function resetView(){closePanel();aFilter=null;fType=null;wTypeFilter=null;tR=950;tTheta=0;tPhi=Math.PI/2;autoRot=false;applyFilter();buildFBar('cat');updateLegend();}
 
 // ══ START ════════════════════════════════
 function startApp(){
