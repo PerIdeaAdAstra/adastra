@@ -15,13 +15,7 @@
 html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font)}
 #label-overlay{position:fixed;inset:0;pointer-events:none;z-index:5;overflow:hidden}
 .nlabel{position:absolute;transform:translate(-50%,-100%);font-size:11px;font-weight:600;color:#fff;text-shadow:0 0 8px rgba(0,0,0,1),0 0 4px rgba(0,0,0,1);white-space:nowrap;pointer-events:none;transition:opacity .2s}
-/* LEGEND */
-#legend{position:fixed;left:12px;bottom:20px;z-index:19;transition:left .32s;background:rgba(4,4,15,.75);padding:8px 10px;border-radius:10px;border:1px solid var(--border);backdrop-filter:blur(4px)}
-.leg-item{display:flex;align-items:center;gap:6px;font-size:10px;color:rgba(255,255,255,.45);margin-bottom:3px;cursor:pointer;transition:color .15s;white-space:nowrap}
-.leg-item:last-child{margin-bottom:0}
-.leg-item:hover{color:rgba(255,255,255,.9)}
-.leg-item.on{color:#fff;font-weight:600}
-.leg-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
 
 
 /* INTRO */
@@ -103,7 +97,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .dfill{height:100%;border-radius:3px}
 
 /* FULL PANELS */
-.fpanel{position:fixed;top:120px;left:0;right:0;bottom:0;z-index:15;overflow-y:auto;padding:10px 14px;display:none;background:rgba(4,4,15,.97);backdrop-filter:blur(8px)}
+.fpanel{position:fixed;top:88px;left:0;right:0;bottom:0;z-index:15;overflow-y:auto;padding:10px 14px;display:none;background:rgba(4,4,15,.97);backdrop-filter:blur(8px)}
 .pcard{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer}
 .pcard:hover{background:rgba(255,255,255,.07)}
 .pnodes{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
@@ -219,7 +213,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 <div id="three-wrap"></div>
 <div id="label-overlay"></div>
 <div id="map-dim" style="position:fixed;inset:0;z-index:14;background:rgba(4,4,15,.7);opacity:0;transition:opacity .3s;pointer-events:none"></div>
-<div id="legend" style="display:none"></div>
+
 
 <!-- HEADER -->
 <div class="hdr" id="hdr" style="display:none">
@@ -584,6 +578,14 @@ function makeMesh(id){
   const mat=new T.MeshPhongMaterial({color:new T.Color(col),emissive:new T.Color(col),emissiveIntensity:.25,transparent:secret,opacity:secret?.7:1,wireframe:secret});
   const mesh=new T.Mesh(new T.SphereGeometry(sz,14,14),mat);
   mesh.position.set(p.x,p.y,p.z);mesh.userData.id=id;
+  // Glow halo ring for prominent nodes
+  if(sz>8&&!secret){
+    const rg=new T.RingGeometry(sz*1.5,sz*2.1,32);
+    const rm=new T.MeshBasicMaterial({color:new T.Color(col),transparent:true,opacity:.12,side:T.DoubleSide,depthWrite:false});
+    const ring=new T.Mesh(rg,rm);
+    ring.position.set(p.x,p.y,p.z);
+    scene.add(ring);
+  }
   scene.add(mesh);meshes[id]=mesh;
 
   // HTML overlay labels instead of 3D sprites
@@ -607,7 +609,7 @@ function addSecretMesh(id){
 
 // Top 20 most connected nodes — always show labels
 const topNodes=new Set(
-  [...nids].sort((a,b)=>(NODES[b]?.connections?.length||0)-(NODES[a]?.connections?.length||0)).slice(0,20)
+  [...nids].sort((a,b)=>(NODES[b]?.connections?.length||0)-(NODES[a]?.connections?.length||0)).slice(0,30)
 );
 
 function updateLabels(){
@@ -635,9 +637,10 @@ function updateLabels(){
 
     lbl.style.left=sx+'px';
     lbl.style.top=(sy-10)+'px';
-    lbl.style.opacity=isSel?'1':isConn?'.9':isTop?'.6':'.45';
-    lbl.style.fontSize=isSel?'13px':isConn?'11px':'10px';
-    lbl.style.fontWeight=isSel||isConn?'700':'500';
+    lbl.style.opacity=isSel?'1':isConn?'.95':isTop?'.75':'.4';
+    lbl.style.fontSize=isSel?'14px':isConn?'12px':isTop?'11px':'10px';
+    lbl.style.fontWeight=isSel||isConn||isTop?'600':'400';
+    lbl.style.textShadow='0 0 10px rgba(0,0,0,1),0 0 6px rgba(0,0,0,1)';
   });
 }
 
@@ -811,7 +814,7 @@ function closePanel(){
 function shiftUI(open){
   const pw=open&&window.innerWidth>680?Math.min(420,Math.round(window.innerWidth*.42)):0;
   const v=pw?pw+'px':'0';
-  ['three-wrap','hdr','mbar','fbar','zoom','legend'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.right=v;});
+  ['three-wrap','hdr','mbar','fbar','zoom'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.right=v;});
   setTimeout(resizeR,340);
 }
 
@@ -1113,6 +1116,7 @@ function setMode(mode){
   if(dim)dim.style.opacity=fullModes.includes(mode)?'1':'0';
   if(dim)dim.style.pointerEvents=fullModes.includes(mode)?'auto':'none';
 
+  autoRot=false;
   if(mode==='mapa'){
     buildFBar(fType==='sens'?'sens':'cat');
     document.getElementById('fbar').style.display='flex';
@@ -1174,13 +1178,39 @@ function setWorkType(key){
 
 function setFilter(key,type){
   aFilter=key==='null'?null:key;fType=aFilter?type:null;
-  // If in sensaciones mode, keep map interactive
-  if(type==='sens'){document.getElementById('three-wrap').style.pointerEvents='auto';}
   closePanel();
   document.querySelectorAll('.fchip').forEach(e=>e.classList.remove('on'));
   document.getElementById('fc-'+key)?.classList.add('on');
   applyFilter();
-  updateLegend();
+  // Sensaciones — show mini node map like Época
+  if(type==='sens'&&aFilter){
+    buildSensacionDetail(aFilter);
+  } else if(type==='sens'&&!aFilter){
+    document.getElementById('fp-sensaciones').style.display='none';
+  }
+}
+
+function buildSensacionDetail(sensId){
+  const sens=(SENSATIONS||{})[sensId];
+  if(!sens)return;
+  const fp=document.getElementById('fp-sensaciones');
+  fp.style.cssText='';
+  fp.style.display='block';
+  fp.innerHTML=`
+    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;letter-spacing:.5px;text-transform:uppercase">${sens.emoji} ${sens.label}</div>
+    <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.7;margin-bottom:16px">${sens.desc||''}</div>
+    <div style="font-size:10px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px">Conceptos · ${(sens.nodes||[]).filter(id=>NODES[id]).length}</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${(sens.nodes||[]).filter(id=>NODES[id]).map(id=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.04);border-radius:12px;border:1px solid ${nCol[id]||'#fff'}33;cursor:pointer" onclick="openNode('${id}')">
+          <div style="width:10px;height:10px;border-radius:50%;background:${nCol[id]||'#fff'};flex-shrink:0"></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;color:${nCol[id]||'#fff'}">${NODES[id].label}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${NODES[id].desc?.split('.')[0]||''}</div>
+          </div>
+          <div style="font-size:10px;color:var(--muted)">→</div>
+        </div>`).join('')}
+    </div>`;
 }
 
 function buildCaminos(){
@@ -1196,7 +1226,6 @@ function buildCaminos(){
 function startPath(pid){
   const p=(PATHS||[]).find(x=>x.id===pid);if(!p)return;
   aFilter=pid;fType='path';applyFilter();
-  // Show path detail view
   showPathDetail(pid);
 }
 
@@ -1614,16 +1643,14 @@ function resetProfile(){
   buildProfile();
 }
 function adjZ(d){tR=Math.max(180,Math.min(2400,tR+d));}
-function resetView(){closePanel();aFilter=null;fType=null;wTypeFilter=null;tR=950;tTheta=0;tPhi=Math.PI/2;autoRot=false;applyFilter();buildFBar('cat');updateLegend();}
+function resetView(){closePanel();aFilter=null;fType=null;wTypeFilter=null;tR=950;tTheta=0;tPhi=Math.PI/2;autoRot=false;applyFilter();buildFBar('cat');}
 
 // ══ START ════════════════════════════════
 function startApp(){
   document.getElementById('intro').style.display='none';
   ['hdr','mbar','fbar','zoom'].forEach(id=>document.getElementById(id).style.display='flex');
   buildFBar('cat');
-  buildLegend();
   setTimeout(showWelcome, 800);
-  document.getElementById('legend').style.display='block';
   // Force resize after intro hides — critical for correct canvas dimensions
   requestAnimationFrame(()=>{
     resizeR();
