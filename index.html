@@ -16,7 +16,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 #label-overlay{position:fixed;inset:0;pointer-events:none;z-index:5;overflow:hidden}
 .nlabel{position:absolute;transform:translate(-50%,-100%);font-size:11px;font-weight:600;color:#fff;text-shadow:0 0 8px rgba(0,0,0,1),0 0 4px rgba(0,0,0,1);white-space:nowrap;pointer-events:none;transition:opacity .2s}
 /* LEGEND */
-#legend{position:fixed;left:12px;bottom:66px;z-index:19;transition:left .32s;background:rgba(4,4,15,.75);padding:8px 10px;border-radius:10px;border:1px solid var(--border);backdrop-filter:blur(4px)}
+#legend{position:fixed;left:12px;bottom:20px;z-index:19;transition:left .32s;background:rgba(4,4,15,.75);padding:8px 10px;border-radius:10px;border:1px solid var(--border);backdrop-filter:blur(4px)}
 .leg-item{display:flex;align-items:center;gap:6px;font-size:10px;color:rgba(255,255,255,.45);margin-bottom:3px;cursor:pointer;transition:color .15s;white-space:nowrap}
 .leg-item:last-child{margin-bottom:0}
 .leg-item:hover{color:rgba(255,255,255,.9)}
@@ -103,7 +103,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .dfill{height:100%;border-radius:3px}
 
 /* FULL PANELS */
-.fpanel{position:fixed;top:120px;left:0;right:0;bottom:52px;z-index:15;overflow-y:auto;padding:10px 14px;display:none;background:rgba(4,4,15,.97);backdrop-filter:blur(8px)}
+.fpanel{position:fixed;top:120px;left:0;right:0;bottom:0;z-index:15;overflow-y:auto;padding:10px 14px;display:none;background:rgba(4,4,15,.97);backdrop-filter:blur(8px)}
 .pcard{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer}
 .pcard:hover{background:rgba(255,255,255,.07)}
 .pnodes{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
@@ -156,12 +156,10 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .toast.show{opacity:1}
 
 /* STATS */
-.stats{position:fixed;bottom:0;left:0;right:0;z-index:19;background:linear-gradient(to top,rgba(4,4,15,.85),transparent);padding:7px;display:flex;justify-content:center;gap:24px;pointer-events:none;transition:right .32s}
-.stat{font-size:10px;color:var(--muted);text-align:center}
-.stat b{display:block;font-size:15px;font-weight:700;color:var(--text)}
+
 
 /* ZOOM */
-.zoom{position:fixed;right:14px;bottom:66px;z-index:20;display:flex;flex-direction:column;gap:4px;transition:right .32s}
+.zoom{position:fixed;right:14px;bottom:20px;z-index:20;display:flex;flex-direction:column;gap:4px;transition:right .32s}
 .zbtn{width:32px;height:32px;background:rgba(255,255,255,.07);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 </style>
 </head>
@@ -263,11 +261,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
   <button class="zbtn" onclick="adjZ(150)">−</button>
 </div>
 
-<div class="stats" id="stats" style="display:none">
-  <div class="stat"><b id="sn">0</b>conceptos</div>
-  <div class="stat"><b id="sw">0</b>obras</div>
-  <div class="stat"><b id="sc">0</b>conexiones</div>
-</div>
+
 
 <script>
 // ══ CATEGORIES ══════════════════════════
@@ -505,6 +499,7 @@ function buildGraph(){
   }
 
   all.forEach(id=>makeMesh(id));
+  addCategoryHalos();
   all.forEach(id=>{
     (NODES[id]?.connections||[]).forEach(cid=>{
       if(!pos3d[cid]||cid<id)return;
@@ -514,6 +509,31 @@ function buildGraph(){
       const line=new T.Line(new T.BufferGeometry().setFromPoints(pts),new T.LineBasicMaterial({color:0x1a2a3a,transparent:true,opacity:.22}));
       line.userData={a:id,b:cid};scene.add(line);edges[key]=line;
     });
+  });
+}
+
+function addCategoryHalos(){
+  const T=window.THREE;if(!T)return;
+  Object.entries(CATS).forEach(([cat,{color,ids}])=>{
+    const catIds=ids.filter(id=>pos3d[id]);
+    if(!catIds.length)return;
+    // Compute centroid
+    let cx=0,cy=0,cz=0;
+    catIds.forEach(id=>{cx+=pos3d[id].x;cy+=pos3d[id].y;cz+=pos3d[id].z;});
+    cx/=catIds.length;cy/=catIds.length;cz/=catIds.length;
+    // Max distance from centroid
+    let maxD=0;
+    catIds.forEach(id=>{
+      const dx=pos3d[id].x-cx,dy=pos3d[id].y-cy,dz=pos3d[id].z-cz;
+      maxD=Math.max(maxD,Math.sqrt(dx*dx+dy*dy+dz*dz));
+    });
+    // Halo sphere — transparent, large
+    const geo=new T.SphereGeometry(maxD+30,16,16);
+    const col=new T.Color(color);
+    const mat=new T.MeshBasicMaterial({color:col,transparent:true,opacity:.04,side:T.BackSide,depthWrite:false});
+    const halo=new T.Mesh(geo,mat);
+    halo.position.set(cx,cy,cz);
+    scene.add(halo);
   });
 }
 
@@ -753,7 +773,7 @@ function closePanel(){
 function shiftUI(open){
   const pw=open&&window.innerWidth>680?Math.min(420,Math.round(window.innerWidth*.42)):0;
   const v=pw?pw+'px':'0';
-  ['three-wrap','hdr','mbar','fbar','zoom','stats','legend'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.right=v;});
+  ['three-wrap','hdr','mbar','fbar','zoom','legend'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.right=v;});
   setTimeout(resizeR,340);
 }
 
@@ -1370,7 +1390,10 @@ function buildProfile(){
   const unexplored=topCat?nids.filter(id=>nCat[id]===topCat&&!visited.has(id)).slice(0,3):[];
 
   panel.innerHTML=`
-    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;letter-spacing:.5px;text-transform:uppercase">Tu ADN de lector</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="font-size:11px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase">Tu ADN de lector</div>
+      <button onclick="resetProfile()" style="font-size:10px;padding:4px 10px;background:rgba(255,75,75,.1);border:1px solid rgba(255,75,75,.2);border-radius:6px;color:rgba(255,100,100,.7);cursor:pointer;font-family:var(--font)">Resetear</button>
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">
       <div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center">
         <div style="font-size:22px;font-weight:800">${visited.size}</div>
@@ -1541,16 +1564,21 @@ function showToast(msg){
 }
 
 // ══ CONTROLS ═════════════════════════════
+function resetProfile(){
+  if(!confirm('¿Resetear tu perfil de exploración?'))return;
+  Object.keys(prof).forEach(k=>delete prof[k]);
+  visited.clear();
+  localStorage.removeItem('aa-prof');
+  localStorage.removeItem('aa-vis');
+  buildProfile();
+}
 function adjZ(d){tR=Math.max(180,Math.min(2400,tR+d));}
 function resetView(){closePanel();aFilter=null;fType=null;wTypeFilter=null;tR=950;tTheta=0;tPhi=Math.PI/2;autoRot=false;applyFilter();buildFBar('cat');updateLegend();}
 
 // ══ START ════════════════════════════════
 function startApp(){
   document.getElementById('intro').style.display='none';
-  ['hdr','mbar','fbar','zoom','stats'].forEach(id=>document.getElementById(id).style.display='flex');
-  document.getElementById('sn').textContent=nids.length;
-  document.getElementById('sw').textContent=TW;
-  document.getElementById('sc').textContent=TC;
+  ['hdr','mbar','fbar','zoom'].forEach(id=>document.getElementById(id).style.display='flex');
   buildFBar('cat');
   buildLegend();
   document.getElementById('legend').style.display='block';
