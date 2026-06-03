@@ -1719,3 +1719,173 @@ const SECRET_NODES = {
     color: "#6c5ce7"
   },
 };
+
+// ═══════════════════════════════════════
+// PANTEÓN — Los que construyeron el universo
+// ═══════════════════════════════════════
+const PANTHEON = {
+  "mary-shelley": {
+    id: "mary-shelley",
+    name: "Mary Shelley",
+    years: "1797 — 1851",
+    epithet: "La que encendió el fuego",
+    bio: "Tenía diecinueve años cuando escribió Frankenstein durante una noche de tormenta en Villa Diodati. Sin saberlo, inventó la ciencia ficción: la pregunta de qué ocurre cuando la ciencia supera la ética del científico. Todo lo que vino después fue una variación de esa pregunta.",
+    quote: "Nada es tan doloroso para la mente humana como un gran e inesperado cambio.",
+    masterwork: "Frankenstein",
+    masterwork_type: "libro",
+    nodes: ["ingenieria-genetica", "clonacion", "identidad", "libre-albedrio", "mesias-tecnologicos"],
+    wiki: "Mary_Shelley",
+    era: "fundadores"
+  },
+  "jules-verne": {
+    id: "jules-verne",
+    name: "Jules Verne",
+    years: "1828 — 1905",
+    epithet: "El cartógrafo de lo imposible",
+    bio: "Verne no especulaba sobre el futuro — lo cartografiaba. Sus novelas son planos de ingeniería de mundos que todavía no existían. Viajó al centro de la Tierra, al fondo del mar y a la Luna con la precisión de quien ha estado allí. La CF como exploración científica empieza con él.",
+    quote: "Todo lo que un hombre es capaz de imaginar, otros hombres serán capaces de realizarlo.",
+    masterwork: "De la Tierra a la Luna",
+    masterwork_type: "libro",
+    nodes: ["colonizacion-espacial", "megaestructuras", "naves-generacionales", "energia-estelar"],
+    wiki: "Jules_Verne",
+    era: "fundadores"
+  },
+  "hg-wells": {
+    id: "hg-wells",
+    name: "H.G. Wells",
+    years: "1866 — 1946",
+    epithet: "El profeta incómodo",
+    bio: "Wells usó la ciencia ficción como bisturí social. La máquina del tiempo no era un juguete — era una crítica de clases. La guerra de los mundos no era terror — era una inversión del colonialismo. Inventó la CF como advertencia, y el siglo XX le dio la razón en casi todo.",
+    quote: "La historia humana se convierte cada vez más en una carrera entre la educación y la catástrofe.",
+    masterwork: "La guerra de los mundos",
+    masterwork_type: "libro",
+    nodes: ["viajes-tiempo", "contacto-extraterrestre", "distopias", "estados-totalitarios", "fin-humanidad"],
+    wiki: "H._G._Wells",
+    era: "fundadores"
+  },
+  "isaac-asimov": {
+    id: "isaac-asimov",
+    name: "Isaac Asimov",
+    years: "1920 — 1992",
+    epithet: "El arquitecto de la razón",
+    bio: "Asimov construyó sistemas. Las Tres Leyes de la Robótica son el código legal más citado de la ficción. La psicohistoria de Fundación es la fantasía suprema de quien cree que el caos puede ser gobernado por la matemática. Nadie pensó el futuro con más orden ni con más melancolía.",
+    quote: "La ciencia puede amortizar sus propios errores. La superstición no puede.",
+    masterwork: "Fundación",
+    masterwork_type: "libro",
+    nodes: ["inteligencia-artificial", "libre-albedrio", "fin-humanidad", "ultima-pregunta", "mentes-colmena"],
+    wiki: "Isaac_Asimov",
+    era: "edad-dorada"
+  },
+  "arthur-c-clarke": {
+    id: "arthur-c-clarke",
+    name: "Arthur C. Clarke",
+    years: "1917 — 2008",
+    epithet: "El visionario del infinito",
+    bio: "Clarke miró al cosmos y no vio vacío — vio escala. Sus novelas son ejercicios de perspectiva: cada vez que el lector cree haber comprendido la magnitud del universo, Clarke añade otro orden de magnitud. Inventor del satélite geoestacionario. Autor del silencio más aterrador de la CF.",
+    quote: "Cualquier tecnología suficientemente avanzada es indistinguible de la magia.",
+    masterwork: "2001: A Space Odyssey",
+    masterwork_type: "libro",
+    nodes: ["contacto-extraterrestre", "megaestructuras", "esferas-dyson", "lo-incomprensible", "ascensores-espaciales", "gran-silencio"],
+    wiki: "Arthur_C._Clarke",
+    era: "edad-dorada"
+  },
+  "philip-k-dick": {
+    id: "philip-k-dick",
+    name: "Philip K. Dick",
+    years: "1928 — 1982",
+    epithet: "El cartógrafo del delirio",
+    bio: "Dick no preguntaba qué es el futuro — preguntaba qué es real. Sus novelas son trampas epistemológicas: el protagonista —y el lector— nunca puede estar seguro de si lo que experimenta es auténtico. Vivió en pobreza, fue vigilado por el FBI, y tuvo visiones que describió en un diario de ocho mil páginas. Probablemente tenía razón en algo.",
+    quote: "La realidad es aquello que, cuando dejas de creer en ello, no desaparece.",
+    masterwork: "¿Sueñan los androides con ovejas eléctricas?",
+    masterwork_type: "libro",
+    nodes: ["realidades-simuladas", "identidad", "memorias-artificiales", "conciencias-digitales", "simulacros-copias", "vigilancia-absoluta"],
+    wiki: "Philip_K._Dick",
+    era: "nueva-ola"
+  },
+  "ursula-k-le-guin": {
+    id: "ursula-k-le-guin",
+    name: "Ursula K. Le Guin",
+    years: "1929 — 2018",
+    epithet: "La antropóloga de los imposibles",
+    bio: "Le Guin trató los mundos alienígenas con la seriedad de una etnógrafa. Sus sociedades extraterrestres no son decorado — son experimentos sociológicos completos. Inventó el ansible, el comunicador instantáneo interestelar. Pero su mayor invento fue demostrar que la CF podía ser literatura.",
+    quote: "La función de la ciencia ficción no es predecir el futuro sino describir el presente.",
+    masterwork: "La mano izquierda de la oscuridad",
+    masterwork_type: "libro",
+    nodes: ["civilizaciones-alienígenas", "lenguajes-extraterrestres", "utopias", "evolucion-dirigida", "identidad"],
+    wiki: "Ursula_K._Le_Guin",
+    era: "nueva-ola"
+  },
+  "stanislaw-lem": {
+    id: "stanislaw-lem",
+    name: "Stanisław Lem",
+    years: "1921 — 2006",
+    epithet: "El filósofo del contacto imposible",
+    bio: "Lem fue el más honesto de todos: sus extraterrestres son verdaderamente incomprensibles. Solaris no puede comunicarse con los humanos no porque no quiera sino porque la diferencia es tan absoluta que la comunicación es una ilusión. Escribió reseñas de libros que no existían, prólogos de enciclopedias inexistentes, y la crítica más feroz de la CF americana desde dentro.",
+    quote: "El universo es una trampa sin trampero.",
+    masterwork: "Solaris",
+    masterwork_type: "libro",
+    nodes: ["lo-incomprensible", "oceanos-conscientes", "primer-contacto", "lenguajes-extraterrestres", "inteligencias-planetarias"],
+    wiki: "Stanisław_Lem",
+    era: "nueva-ola"
+  },
+  "william-gibson": {
+    id: "william-gibson",
+    name: "William Gibson",
+    years: "1948 —",
+    epithet: "El inventor del mañana",
+    bio: "Gibson escribió Neuromante en una máquina de escribir sin haber tocado nunca un ordenador. Inventó el ciberespacio, la matriz, el concepto de interfaz neural directa, y la estética de un futuro sucio y corporativo que el presente se ha esforzado en imitar. La palabra 'cyberspace' es suya.",
+    quote: "El futuro ya está aquí, solo que no está distribuido uniformemente.",
+    masterwork: "Neuromante",
+    masterwork_type: "libro",
+    nodes: ["realidad-virtual", "conciencias-digitales", "corporaciones-omnipotentes", "vigilancia-absoluta", "singularidad-tecnologica", "identidad"],
+    wiki: "William_Gibson",
+    era: "ciberpunk"
+  },
+  "liu-cixin": {
+    id: "liu-cixin",
+    name: "Liu Cixin",
+    years: "1963 —",
+    epithet: "El astrónomo del horror cósmico",
+    bio: "Liu Cixin es el primer autor de CF no anglófono en dominar el género a escala global. El problema de los tres cuerpos y El bosque oscuro son la CF más perturbadora del siglo XXI: un universo donde la supervivencia exige el silencio y la traición es la única estrategia racional. El cosmos como guerra de todos contra todos.",
+    quote: "La civilización no es más que un fino barniz sobre el abismo.",
+    masterwork: "El problema de los tres cuerpos",
+    masterwork_type: "libro",
+    nodes: ["gran-silencio", "bosque-oscuro", "civilizaciones-alienígenas", "fin-humanidad", "hipotesis-planeta-prohibido"],
+    wiki: "Liu_Cixin",
+    era: "contemporaneo"
+  },
+  "octavia-butler": {
+    id: "octavia-butler",
+    name: "Octavia Butler",
+    years: "1947 — 2006",
+    epithet: "La profeta de la carne y el poder",
+    bio: "Butler escribió sobre cuerpos que cambian, sobre jerarquías que se perpetúan, sobre el poder como biología. Sus alienígenas no son metáforas — son el poder mismo, desnudo. Primera autora de CF en ganar el MacArthur Fellowship. Murió antes de ver cuánto se parecería el futuro a sus novelas.",
+    quote: "No hay nada nuevo bajo el sol, pero hay nuevas sombras.",
+    masterwork: "Kindred",
+    masterwork_type: "libro",
+    nodes: ["evolucion-dirigida", "ingenieria-genetica", "identidad", "distopias", "posthumanismo"],
+    wiki: "Octavia_Butler",
+    era: "contemporaneo"
+  },
+  "iain-m-banks": {
+    id: "iain-m-banks",
+    name: "Iain M. Banks",
+    years: "1954 — 2013",
+    epithet: "El arquitecto de la utopía imposible",
+    bio: "Banks inventó la Cultura: una civilización post-escasez gobernada por IAs benevolentes donde los humanos viven sin necesidad de trabajar. Y luego pasó doce novelas explorando por qué incluso la utopía perfecta genera violencia, espionaje y dilemas morales sin solución. La CF como argumento filosófico completo.",
+    quote: "La verdadera medida de una civilización es cómo trata a sus miembros más vulnerables.",
+    masterwork: "El jugador",
+    masterwork_type: "libro",
+    nodes: ["utopias", "inteligencia-artificial", "conciencias-digitales", "posthumanismo", "inmortalidad", "megaestructuras"],
+    wiki: "Iain_Banks",
+    era: "contemporaneo"
+  },
+};
+
+const PANTHEON_ERAS = {
+  "fundadores": { label: "Los fundadores", years: "1818 — 1900", color: "#fdcb6e" },
+  "edad-dorada": { label: "La edad dorada", years: "1930 — 1960", color: "#f5c518" },
+  "nueva-ola": { label: "La nueva ola", years: "1960 — 1980", color: "#a29bfe" },
+  "ciberpunk": { label: "El ciberpunk", years: "1980 — 1995", color: "#00e5c0" },
+  "contemporaneo": { label: "Contemporáneos", years: "1995 —", color: "#ff7675" },
+};
